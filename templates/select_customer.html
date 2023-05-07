@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Table Navigation</title>
+    <style>
+        table, th, td {
+          border: 1px solid black;
+          border-collapse: collapse;
+        }
+        td {
+          width: 100px;
+          height: 50px;
+          text-align: center;
+          vertical-align: middle;
+        }
+        .highlight {
+          background-color: yellow;
+        }
+        .selected {
+          background-color: red;
+        }
+      </style>
+  </head>
+  <body>
+    <table id="myTable"></table>
+    <script>
+      const url = "/get_customer_name";
+      const table = document.getElementById("myTable");
+      let currentX = 0;
+      let currentY = 0;
+
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          let i = 0;
+          while (i < data.length) {
+            const tr = document.createElement("tr");
+            for (let j = 0; j < 8; j++) {
+              if (i >= data.length) {
+                break;
+              }
+              const td = document.createElement("td");
+              td.innerText = data[i].name;
+              tr.appendChild(td);
+              i++;
+            }
+            table.appendChild(tr);
+          }
+          table.rows[currentY].cells[currentX].classList.add("focus");
+          window.addEventListener("keydown", handleKeyDown);
+        });
+
+      function handleKeyDown(event) {
+        switch (event.key) {
+          
+          case "ArrowUp":
+            if (currentY > 0) {
+              currentY--;
+            }
+            break;
+          case "ArrowDown":
+            if (currentY < table.rows.length - 1) {
+              currentY++;
+            }
+            break;
+          case "ArrowLeft":
+            if (currentX > 0) {
+              currentX--;
+            } else if (currentY > 0) {
+              currentY--;
+              currentX = table.rows[currentY].cells.length - 1;
+            }
+            break;
+          case "ArrowRight":
+            if (currentX < table.rows[currentY].cells.length - 1) {
+              currentX++;
+            } else if (currentY < table.rows.length - 1) {
+              currentY++;
+              currentX = 0;
+            }
+            break;
+          case "Enter":
+            alert(1234)
+            table.rows[currentY].cells[currentX].style.backgroundColor = 'red';
+
+            break;
+          case " ":
+            alert(1234)
+            table.rows[currentY].cells[currentX].style.backgroundColor = 'white';
+            break;
+          default:
+            return;
+        }
+        for (let i = 0; i < table.rows.length; i++) {
+          for (let j = 0; j < table.rows[i].cells.length; j++) {
+            table.rows[i].cells[j].classList.remove("focus");
+          }
+        }
+        table.rows[currentY].cells[currentX].classList.add("focus");
+      }
+    </script>
+    <style>
+      .focus {
+        background-color: yellow;
+      }
+    </style>
+  </body>
+</html>

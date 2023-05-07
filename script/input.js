@@ -126,7 +126,7 @@ table.addEventListener("keydown", function(event) {
         // 第一格 (產生日期)
         if (currentCol == 0){
             var today = new Date();
-                        var mmdd = (today.getMonth() + 1).toString().padStart(2, '0') + today.getDate().toString().padStart(2, '0');
+            var mmdd = (today.getMonth() + 1).toString().padStart(2, '0') + today.getDate().toString().padStart(2, '0');
             table.rows[currentRow].cells[currentCol].innerText = mmdd;
             currentCol++;
             table.rows[currentRow].cells[currentCol].focus();
@@ -171,21 +171,22 @@ table.addEventListener("keydown", function(event) {
 
         // 第五格 (分)            
         if (currentCol == 4){
+
             data = table.rows[currentRow].cells[currentCol].innerText
-            if (data!=""){
+
+            if (data==""){
+                data = table.rows[currentRow].cells[currentCol].innerText=0
+            }
+
             table.rows[currentRow].cells[currentCol].focus();
             currentCol++;
             table.rows[currentRow].cells[currentCol].focus();
-            }
             break;
         }
-        // 第六格 (箱)
+        // 第六格 (龍)
         if (currentCol == 5){
-            data = table.rows[currentRow].cells[currentCol].innerText
-            if (data!=""){
             currentCol++;
             table.rows[currentRow].cells[currentCol].focus();
-            }
             break;
         }
         // 第七格 (總價)

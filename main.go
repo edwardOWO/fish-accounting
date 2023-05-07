@@ -91,6 +91,11 @@ func main() {
 	// 取得魚種資訊
 	router.GET("/get_product_name", handleProduct)
 
+	// 讀取客戶頁面
+	router.GET("/select_customer", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "select_customer.html", gin.H{})
+	})
+
 	router.Run(":8080")
 }
 
@@ -107,10 +112,11 @@ func handlePostFish(c *gin.Context) {
 }
 
 func handleCustome(c *gin.Context) {
-	customers := []Customer{
-		{1, "王小明"},
-		{2, "王曉華"},
-		{3, "王小松"},
+	customers := []Customer{}
+
+	for i := 1; i <= 60; i++ {
+		name := fmt.Sprintf("測試員(%d)", i)
+		customers = append(customers, Customer{i, name})
 	}
 	c.JSON(http.StatusOK, customers)
 }
