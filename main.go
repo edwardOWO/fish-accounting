@@ -24,6 +24,10 @@ type Customer struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
+type CustomerList struct {
+	Customers []Customer `json:"customers"`
+}
+
 type Product struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
@@ -88,6 +92,9 @@ func main() {
 	// 取得客戶資訊
 	router.GET("/get_customer_name", handleCustome)
 
+	// 選擇今天客戶
+	router.POST("/set_today_customer_name", set_today_customer_name)
+
 	// 取得魚種資訊
 	router.GET("/get_product_name", handleProduct)
 
@@ -119,6 +126,17 @@ func handleCustome(c *gin.Context) {
 		customers = append(customers, Customer{i, name})
 	}
 	c.JSON(http.StatusOK, customers)
+}
+
+func set_today_customer_name(c *gin.Context) {
+	var customers []Customer
+	if err := c.BindJSON(&customers); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	fmt.Println(customers)
+	c.JSON(200, gin.H{"message": "Success"})
 }
 
 func handleProduct(c *gin.Context) {

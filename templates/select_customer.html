@@ -24,7 +24,36 @@
   </head>
   <body>
     <table id="myTable"></table>
+    <button id="myButton">傳送表單</button>
     <script>
+
+      myButton.onclick = function() {
+          const form = document.getElementById('myTable');
+          const rows = form.getElementsByTagName('tr');
+          const data = [];
+          for (let i = 0; i < rows.length; i++) {
+              const row = rows[i];
+              const cells = row.getElementsByTagName('td');
+
+              for (let i = 0; i < cells.length; i++){
+
+                if (cells[i].style.backgroundColor == "red"){
+                  const id=cells[i].innerText;
+                  const name=cells[i].innerText;
+
+                  data.push({
+                  id: parseInt(i),
+                  name: name,
+                  });
+                }
+              }
+          }
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', '/set_today_customer_name');
+          xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+          xhr.send(JSON.stringify(data));
+      };
+
       const url = "/get_customer_name";
       const table = document.getElementById("myTable");
       let currentX = 0;
@@ -81,12 +110,11 @@
             }
             break;
           case "Enter":
-            alert(1234)
             table.rows[currentY].cells[currentX].style.backgroundColor = 'red';
 
             break;
           case " ":
-            alert(1234)
+
             table.rows[currentY].cells[currentX].style.backgroundColor = 'white';
             break;
           default:

@@ -185,41 +185,70 @@ table.addEventListener("keydown", function(event) {
         }
         // 第六格 (龍)
         if (currentCol == 5){
+
+            if (table.rows[currentRow].cells[currentCol].innerHTML==2){
+                table.rows[currentRow].cells[currentCol].innerHTML="小"
+            }
+            if (table.rows[currentRow].cells[currentCol].innerHTML==3){
+                table.rows[currentRow].cells[currentCol].innerHTML="大"
+            }
+            if (table.rows[currentRow].cells[currentCol].innerHTML=="b"){
+                table.rows[currentRow].cells[currentCol].innerHTML="2小"
+            }
+            if (table.rows[currentRow].cells[currentCol].innerHTML=="c"){
+                table.rows[currentRow].cells[currentCol].innerHTML="2大"
+            }
+            if (data==""){
+                data = table.rows[currentRow].cells[currentCol].innerText=0
+            }
             currentCol++;
             table.rows[currentRow].cells[currentCol].focus();
             break;
         }
         // 第七格 (總價)
         if (currentCol == 6){
-
+            // 票據
             ticket=5
             price = table.rows[currentRow].cells[3].innerText
-                        weight = table.rows[currentRow].cells[2].innerText
-                        result = (price*weight+ticket)*1.06+table.rows[currentRow].cells[5].innerText
-                        result=Math.round(result * 10)/ 10
-                        table.rows[currentRow].cells[currentCol].innerText=result
+            weight = table.rows[currentRow].cells[2].innerText
 
-            var newRow = table.insertRow(-1);
-            for (var i = 0; i < table.rows[0].cells.length; i++) {
-            var cell = newRow.insertCell(i);
-            cell.contentEditable = true;
+            if (table.rows[currentRow].cells[5].innerText == "小"){
+                fish_case=30
+            }else if(table.rows[currentRow].cells[5].innerText == "大"){
+                fish_case=60
+            }else if(table.rows[currentRow].cells[5].innerText == "2小"){
+                fish_case=60
+            }else if(table.rows[currentRow].cells[5].innerText == "2大"){
+                fish_case=120
+            }else{
+                fish_case=table.rows[currentRow].cells[5].innerText
             }
-            currentRow++;
-            table.rows[currentRow].cells[0].focus();
-            currentCol=0
+
+            result = (price*weight+ticket)*1.06
+            result+=parseInt(fish_case);
+            result=Math.round(result * 10)/ 10
+            table.rows[currentRow].cells[currentCol].innerText=result
+
+            // 當第一行欄位沒有數值時,不再移動到下一行
+            if (table.rows[currentRow].cells[0].innerText!=""){
+                var newRow = table.insertRow(-1);
+                for (var i = 0; i < table.rows[0].cells.length; i++) {
+                var cell = newRow.insertCell(i);
+                cell.contentEditable = true;
+                }
+                currentRow++;
+                table.rows[currentRow].cells[0].focus();
+                currentCol=0
+            }
             break;
         }
 
+
         case 83: // clear col
         event.preventDefault();
-
         button=document.getElementById('myButton');
         button.click()
         alert(83)
         break;
-
-        
-        
-        
     }
 });
