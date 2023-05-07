@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Excel-like Table</title>
+    <style>
+      table {
+        border-collapse: collapse;
+        white-space: nowrap;
+      }
+
+      td {
+        border: 1px solid black;
+        padding: 5px;
+        text-align: center;
+        width: 100px;
+      }
+
+      td:focus {
+        outline: none;
+        background-color: #f0f0f0;
+      }
+
+      body {
+        background-color: #acacdb;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: row;
+        white-space: nowrap;
+      }
+
+      h5 {
+        margin-right: 20px;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div style="overflow-x: auto; white-space: nowrap;"></div>
+    
+
+    <div class="container">
+      <h5 id="customer">客戶: </h5>
+      <h5 id="current_count">今日累計帳款: </h5>
+      <h5 id="pre_count">過去累積帳款: </h5>
+    </div>
+
+    <table id="myTable">
+      <thead>
+				<tr>
+					<th>日期</th>
+					<th>魚名</th>
+					<th>重量</th>
+					<th>單價</th>
+					<th>分</th>
+					<th>箱</th>
+					<th>總價</th>
+				</tr>
+			</thead>
+      <tr>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+      </tr>
+    </table>
+    <button id="myButton">傳送表單</button>
+    </div>
+
+    <script src="/script/input.js"></script>
+  </body>
+</html>

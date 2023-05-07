@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Button Navigation</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      .button-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .button {
+        padding: 10px;
+        margin: 5px;
+        font-size: 20px;
+      }
+      .button:focus {
+        background-color: #ddd;
+      }
+    </style>
+  </head>
+  <body>
+
+
+    <div class="button-container">
+
+	   <h1>魚貨管理系統</h1>
+	  <button id="button1" class="button" onclick="window.location.href='http://127.0.0.1:8080/input'">帳目輸入</button>
+      <button id="button2" class="button" onclick="window.location.href='http://127.0.0.1:8080/check'">帳目檢查</button>
+      <button id="button3" class="button" onclick="window.location.href='http://127.0.0.1:8080/print'">帳目列印</button>
+      <button id="button4" class="button" onclick="window.location.href='http://127.0.0.1:8080/status'">帳目狀況</button>
+      <button id="button5" class="button" onclick="window.location.href='http://127.0.0.1:8080/customer'">客戶建檔</button>
+	  <button id="button6" class="button" onclick="window.location.href='http://127.0.0.1:8080/product'">魚名建檔</button>
+	  <button id="button7" class="button" onclick="window.location.href='http://127.0.0.1:8080/account'">當日總帳</button>
+	  <button id="button8" class="button" onclick="window.location.href='http://127.0.0.1:8080/exit'">離開</button>
+    </div>
+    <script>
+      const buttons = document.querySelectorAll('.button');
+      let currentButtonIndex = 0;
+      buttons[currentButtonIndex].focus();
+
+      function handleArrowKeys(event) {
+        const key = event.key;
+        if (key === 'ArrowDown') {
+          currentButtonIndex++;
+          if (currentButtonIndex >= buttons.length) {
+            currentButtonIndex = 0;
+          }
+        } else if (key === 'ArrowUp') {
+          currentButtonIndex--;
+          if (currentButtonIndex < 0) {
+            currentButtonIndex = buttons.length - 1;
+          }
+        } 
+        buttons[currentButtonIndex].focus();
+      }
+
+      document.addEventListener('keydown', handleArrowKeys);
+
+
+
+	    // 當按下 Enter 鍵時，觸發按鈕的 click 事件
+  	document.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+      event.preventDefault(); // 防止預設行為（例如提交表單）
+      switch (document.activeElement.id) { // 判斷當前聚焦的元素 ID
+        case "button1":
+          document.getElementById("button1").click(); // 觸發 Button1 的 click 事件
+          break;
+        case "button2":
+          document.getElementById("button2").click(); // 觸發 Button2 的 click 事件
+          break;
+        case "button3":
+          document.getElementById("button3").click(); // 觸發 Button3 的 click 事件
+          break;
+        case "button4":
+          document.getElementById("button4").click(); // 觸發 Button4 的 click 事件
+          break;
+        case "button5":
+          document.getElementById("button5").click(); // 觸發 Button5 的 click 事件
+          break;
+		case "button6":
+          document.getElementById("button6").click(); // 觸發 Button5 的 click 事件
+          break;
+		case "button7":
+          document.getElementById("button7").click(); // 觸發 Button5 的 click 事件
+          break;
+		case "button8":
+          document.getElementById("button7").click(); // 觸發 Button5 的 click 事件
+          break;				
+      }
+    }
+  });
+    </script>
+  </body>
+</html>

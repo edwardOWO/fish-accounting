@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>帳目輸入</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script>
+		function arrowKeyNavigation(event) {
+			var code = event.keyCode;
+			if (code == 37 || code == 38 || code == 39 || code == 40|| code == 13) {
+				event.preventDefault();
+				var currInput = event.target;
+				var currCell = currInput.parentNode;
+				var currRow = currCell.parentNode;
+				var currColIndex = currCell.cellIndex;
+				var currRowIndex = currRow.rowIndex;
+				switch (code) {
+					case 37: // Left arrow
+						if (currColIndex > 0) {
+							currCell = currRow.cells[currColIndex - 1];
+							
+						}
+						break;
+					case 38: // Up arrow
+						if (currRowIndex > 0) {
+							currRow = currRow.previousElementSibling;
+							currCell = currRow.cells[currColIndex];
+						}
+						break;
+					
+					case 39: // Right arrow
+						if (currColIndex < currRow.cells.length - 1) {
+							currCell = currRow.cells[currColIndex + 1];
+						}
+						break;
+					case 40: // Down arrow
+						if (currRowIndex > 0) {
+							currRow = currRow.nextElementSibling;
+							currCell = currRow.cells[currColIndex];
+						}
+						var table = document.getElementsByTagName('table')[0];
+						var tbody = table.tBodies[table.tBodies.length - 1];
+						// 在 tbody 中新增一個 row
+						var row = tbody.insertRow();
+						// 新增兩個 td，並將內容設為空字串
+						var cell1 = row.insertCell();
+						cell1.appendChild(document.createTextNode(''));
+						var cell2 = row.insertCell();
+						cell2.appendChild(document.createTextNode(''));
+						break;
+					case 13: // Down arrow
+						//alert(currColIndex)
+
+
+
+						switch (currColIndex){
+
+							case 0:
+								var today = new Date();
+								var mmdd = (today.getMonth() + 1).toString().padStart(2, '0') + today.getDate().toString().padStart(2, '0');
+								if (currColIndex == 0){
+									currCell.children[0].value=mmdd
+									currCell = currRow.cells[currColIndex + 1];
+								}
+							break;
+							case 1:
+								if (currCell.children[0].value=="01"){
+									currCell.children[0].value="白鯧"
+									currCell = currRow.cells[currColIndex + 1];	
+								}
+								break;
+								
+							case 5:
+								if (currCell.children[0].value=="01"){
+									currCell.children[0].value="白鯧"
+								}
+								currCell = currRow.cells[currColIndex + 1];
+								break;
+							case 6:
+								
+								price = currRow.cells[2].children[0].value
+								weight = currRow.cells[3].children[0].value
+								result = (price*weight+5)*1.06+currRow.cells[3].children[0].value
+								result=Math.round(result * 10)/ 10
+								currCell.children[0].value=result
+
+								if (currCell.children[0].value != ""){
+									currRow = currRow.nextElementSibling;
+									currCell = currRow.cells[0];
+								}
+
+								break;
+							default:
+								currCell = currRow.cells[currColIndex + 1];
+								break;
+
+						}
+						break;
+				}
+				var newInput = currCell.getElementsByTagName("input")[0];
+				newInput.focus();
+			}
+		}
+
+		
+		function handleEnterKey(event) {
+			var code = event.keyCode;
+			if (code == 13) {
+				event.preventDefault();
+				var currInput = event.target;
+				var currCellValue = currInput.value;
+				if (currCellValue == "01") {
+					currInput.value = "測試";
+				}
+				var currCell = currInput.parentNode;
+				var currRow = currCell.parentNode;
+				var currColIndex = currCell.cellIndex;
+				var currRowIndex = currRow.rowIndex;
+				if (currRowIndex < currRow.parentNode.rows.length - 1) {
+					currRow = currRow.nextElementSibling;
+					currCell = currRow.cells[currColIndex];
+				}
+				else {
+					if (currColIndex < currRow.cells.length - 1) {
+						currCell = currRow.cells[currColIndex + 1];
+					}
+					else {
+						currCell = currRow.cells[0];
+					}
+					currRow = currCell.parentNode;
+				}
+				var newInput = currCell.getElementsByTagName("input")[0];
+				newInput.focus();
+			}
+		}
+
+		function addRow() {
+			var table = document.getElementsByTagName('table')[0];
+			var tbody = table.tBodies[table.tBodies.length - 1];
+			// 在 tbody 中新增一個 row
+			var row = tbody.insertRow();
+			// 新增兩個 td，並將內容設為空字串
+			var cell1 = row.insertCell();
+			cell1.appendChild(document.createTextNode('1'));
+			var cell2 = row.insertCell();
+			cell1.appendChild(document.createTextNode(''));
+			var cell3 = row.insertCell();
+			cell1.appendChild(document.createTextNode(''));
+			var cell4 = row.insertCell();
+			cell1.appendChild(document.createTextNode(''));
+			var cell5 = row.insertCell();
+			cell1.appendChild(document.createTextNode(''));
+			var cell6 = row.insertCell();
+			cell1.appendChild(document.createTextNode(''));
+			var cell7 = row.insertCell();
+			cell1.appendChild(document.createTextNode(''));
+		}
+    
+		
+	</script>
+</head>
+<body>
+	<h1>帳目輸入</h1>
+
+	<form>
+		<table id="inputTable" onkeydown="arrowKeyNavigation(event)">
+			<thead>
+				<tr>
+					<th>日期</th>
+					<th>魚名</th>
+					<th>重量</th>
+					<th>單價</th>
+					<th>分</th>
+					<th>箱</th>
+					<th>總價</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><input type="text" name="col1_row1"></td>
+					<td><input type="text" name="col2_row1"></td>
+					<td><input type="text" name="col3_row1"></td>
+					<td><input type="text" name="col4_row1"></td>
+					<td><input type="text" name="col5_row1"></td>
+					<td><input type="text" name="col6_row1"></td>
+					<td><input type="text" name="col7_row1"></td>
+				</tr>
+				<tr>
+					<td><input type="text" name="col1_row2"></td>
+					<td><input type="text" name="col2_row2"></td>
+					<td><input type="text" name="col3_row2"></td>
+					<td><input type="text" name="col4_row2"></td>
+					<td><input type="text" name="col5_row2"></td>
+					<td><input type="text" name="col6_row2"></td>
+					<td><input type="text" name="col7_row2"></td>
+				</tr>
+			</tbody>
+		</table>
+		<button class="button" onclick="addRow()">新增一列</button>
+
+		<!--<input type="submit" value="Submit"> -->
+	</form>
+</body>
+</html>
