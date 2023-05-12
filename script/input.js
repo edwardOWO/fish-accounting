@@ -229,11 +229,11 @@ table.addEventListener("keydown", function(event) {
             result=Math.round(result * 10)/ 10
             table.rows[currentRow].cells[currentCol].innerText=result
 
-            data2 = current_count.innerHTML
-            data2 = parseFloat(data2)
-            data2+=result
+            today_count = current_count.innerHTML
+            today_count = parseFloat(today_count)
+            today_count+=result
 
-            current_count.innerHTML=data2
+            current_count.innerHTML=today_count
 
 
             // 當第一行欄位沒有數值時,不再移動到下一行
