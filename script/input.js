@@ -6,13 +6,13 @@ window.onload = function() {
 
     // 宣告 dictionary 變數
     var customer = document.getElementById("customer");
-    customer.innerHTML="測試客戶";
+    customer.innerHTML="NULL";
 
     var current_count = document.getElementById("current_count");
     current_count.innerHTML=0;
 
     var pre_count = document.getElementById("pre_count");
-    pre_count.innerHTML+=0;
+    pre_count.innerHTML=0;
 
 
 
@@ -24,6 +24,22 @@ window.onload = function() {
         for (let i = 0; i < data.length; i++) {
         let customer = data[i];
         dictionary[customer.key] = customer.name;
+        }
+
+        // 顯示 dictionary 變數內容
+        console.log(dictionary);
+    })
+    .catch(error => console.error(error)); // 若發生錯誤則顯示錯誤訊息
+
+
+    // 使用 fetch() 方法呼叫 API
+    fetch('/get_today_customer_name')
+    .then(response => response.json()) // 將回傳的資料轉為 JSON 格式
+    .then(data => {
+        // 將 JSON 格式資料存入 dictionary 變數
+        for (let i = 0; i < data.length; i++) {
+            customer.innerHTML=data[i].name
+            pre_count.innerHTML=parseFloat(data[i].totalArrears)
         }
 
         // 顯示 dictionary 變數內容
@@ -136,14 +152,16 @@ table.addEventListener("keydown", function(event) {
         // 第二格 (魚種)            
         if (currentCol == 1){
             data = table.rows[currentRow].cells[currentCol].innerText
-        
-            if(checkFishColor(data)!="未知"){
-            table.rows[currentRow].cells[currentCol].innerText=checkFishColor(data)
+            data=checkFishColor(data)
+            
+            if (typeof data === 'undefined') {
+                break;
+            }
+            
+            table.rows[currentRow].cells[currentCol].innerText=data
             currentCol++;
             table.rows[currentRow].cells[currentCol].focus();
-            break;
-            }
-
+            
             break;
         }
 

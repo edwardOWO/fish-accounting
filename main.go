@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -26,9 +27,12 @@ type FishList struct {
 	Fishes []Fish `json:"fishes"`
 }
 type Customer struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-	Date string `json:"date"`
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	Setting      string `json:"setting"`
+	Date         string `json:"date"`
+	TotalArrears string `json:"totalArrears"`
+	TodayArrears string `json:"todayArrears"`
 }
 type CustomerList struct {
 	Customers []Customer `json:"customers"`
@@ -79,7 +83,7 @@ func insertSelectCustomer(name string, id int, date string) error {
 	now := time.Now()
 	date_now := now.Format("2006-01-02")
 
-	_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears) VALUES (?, ?, 0,?,?,?)`, name, id, date_now, 102.55, 103.55)
+	_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears) VALUES (?, ?, 0,?,?,?)`, name, id, date_now, 9000, 10000)
 	if err != nil {
 		return fmt.Errorf("failed to insert customer: %v", err)
 	}
@@ -151,6 +155,9 @@ func main() {
 	// 選擇今天客戶
 	router.POST("/set_today_customer_name", set_today_customer_name)
 
+	// 讀取今天客戶
+	router.GET("/get_today_customer_name", get_today_customer_name)
+
 	// 取得魚種資訊
 	router.GET("/get_product_name", handleProduct)
 
@@ -177,9 +184,9 @@ func handlePostFish(c *gin.Context) {
 func handleCustome(c *gin.Context) {
 	customers := []Customer{}
 
-	for i := 1; i <= 120; i++ {
+	for i := 1; i <= 30; i++ {
 		name := fmt.Sprintf("測試員(%d)", i)
-		customers = append(customers, Customer{i, name, ""})
+		customers = append(customers, Customer{i, name, "", "", "", ""})
 	}
 	c.JSON(http.StatusOK, customers)
 }
@@ -196,6 +203,47 @@ func set_today_customer_name(c *gin.Context) {
 
 	fmt.Println(customers)
 	c.JSON(200, gin.H{"message": "Success"})
+}
+
+func get_today_customer_name(c *gin.Context) {
+
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	var todayCustomers []Customer
+
+	// 取得今天日期
+	today := time.Now().Format("2006-01-02")
+
+	// 查詢今天的 today_customer 資料
+	rows, err := db.Query("SELECT * FROM today_customer WHERE date=? ORDER BY ID LIMIT 1", today)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	// 迭代查詢結果，並將結果加入 slice
+	for rows.Next() {
+		var customer Customer
+		err := rows.Scan(&customer.ID, &customer.Name, &customer.Setting, &customer.Date, &customer.TodayArrears, &customer.TotalArrears)
+		if err != nil {
+			log.Fatal(err)
+		}
+		todayCustomers = append(todayCustomers, customer)
+	}
+
+	// 檢查是否有迭代中發生錯誤
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	c.JSON(http.StatusOK, todayCustomers)
+
+	// 輸出結果
+	fmt.Println(todayCustomers)
 }
 
 func handleProduct(c *gin.Context) {
