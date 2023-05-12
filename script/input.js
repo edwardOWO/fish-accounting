@@ -225,46 +225,72 @@ table.addEventListener("keydown", function(event) {
         }
         // 第七格 (總價)
         if (currentCol == 6){
-            // 票據
-            ticket=5
-            price = table.rows[currentRow].cells[3].innerText
-            weight = table.rows[currentRow].cells[2].innerText
 
-            if (table.rows[currentRow].cells[5].innerText == "小"){
-                fish_case=30
-            }else if(table.rows[currentRow].cells[5].innerText == "大"){
-                fish_case=60
-            }else if(table.rows[currentRow].cells[5].innerText == "2小"){
-                fish_case=60
-            }else if(table.rows[currentRow].cells[5].innerText == "2大"){
-                fish_case=120
-            }else{
-                fish_case=table.rows[currentRow].cells[5].innerText
+            // 檢查欄位是否都有數值
+            check_empty=1
+            for (var i = 0; i < 6;i++){
+                if (table.rows[currentRow].cells[i].innerText==""){
+                    check_empty=0
+                }
             }
+            // 所有欄位皆有數值時才進行計算
+            if (check_empty ==1){
 
-            result = (price*weight+ticket)*1.06
-            result+=parseInt(fish_case);
-            result=Math.round(result * 10)/ 10
-            table.rows[currentRow].cells[currentCol].innerText=result
+                // 票據
+                ticket=5
+                // 單價
+                price = table.rows[currentRow].cells[3].innerText
+                // 重量
+                weight = table.rows[currentRow].cells[2].innerText
 
-            today_count = current_count.innerHTML
-            today_count = parseFloat(today_count)
-            today_count+=result
+                // 小籠 60
+                if (table.rows[currentRow].cells[5].innerText == "小"){
+                    fish_case=30
+                // 大籠 60
+                }else if(table.rows[currentRow].cells[5].innerText == "大"){
+                    fish_case=60
+                // 兩個小籠 30 *2
+                }else if(table.rows[currentRow].cells[5].innerText == "2小"){
+                    fish_case=60
+                // 兩個大籠 60 * 2
+                }else if(table.rows[currentRow].cells[5].innerText == "2大"){
+                    fish_case=120
+                // 如果沒有依照該欄位數值進行加總,預設為 0
+                }else{
+                    fish_case=table.rows[currentRow].cells[5].innerText
+                }
 
-            current_count.innerHTML=today_count
+                //  記帳公式 (單價*重量+票據)*1.06  預設票據為五塊錢
+                result = (price*weight+ticket)*1.06
+                // 將結果加上籠子重量
+                result+=parseInt(fish_case);
+                // 四捨五入
+                result=Math.round(result * 10)/ 10
+                // 回填結果
+                table.rows[currentRow].cells[currentCol].innerText=result
+                // 取得今天帳目
+                today_count = current_count.innerHTML
 
+                // 加總帳目 取小數點四捨五入後一位
+                today_count = parseFloat(today_count)
+                today_count+=result
 
-            // 當第一行欄位沒有數值時,不再移動到下一行
-            if (table.rows[currentRow].cells[0].innerText!=""){
+                // 回填帳目
+                current_count.innerHTML=today_count
+                
+                // 新增下一列,繼續進行運作
                 var newRow = table.insertRow(-1);
                 for (var i = 0; i < table.rows[0].cells.length; i++) {
                 var cell = newRow.insertCell(i);
                 cell.contentEditable = true;
                 }
                 currentRow++;
+
+                // 移動到下一列的第一格
                 table.rows[currentRow].cells[0].focus();
                 currentCol=0
             }
+
             break;
         }
 
