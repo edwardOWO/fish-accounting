@@ -35,15 +35,16 @@
               const row = rows[i];
               const cells = row.getElementsByTagName('td');
 
-              for (let i = 0; i < cells.length; i++){
+              for (let j = 0; j < cells.length; j++){
 
-                if (cells[i].style.backgroundColor == "red"){
-                  const id=cells[i].innerText;
-                  const name=cells[i].innerText;
+                if (cells[j].style.backgroundColor == "red"){
+                  const id=cells[j].innerText;
+                  const name=cells[j].innerText;
 
                   data.push({
-                  id: parseInt(i),
+                  id: parseInt(i+j),
                   name: name,
+                  date: new Date(2023, 4, 7, 15, 45, 0, 0),
                   });
                 }
               }
@@ -65,7 +66,7 @@
           let i = 0;
           while (i < data.length) {
             const tr = document.createElement("tr");
-            for (let j = 0; j < 8; j++) {
+            for (let j = 0; j < 10; j++) {
               if (i >= data.length) {
                 break;
               }

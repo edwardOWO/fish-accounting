@@ -6,13 +6,13 @@ window.onload = function() {
 
     // 宣告 dictionary 變數
     var customer = document.getElementById("customer");
-    customer.innerHTML+="測試客戶";
+    customer.innerHTML="測試客戶";
 
     var current_count = document.getElementById("current_count");
-    current_count.innerHTML+=100;
+    current_count.innerHTML=0;
 
     var pre_count = document.getElementById("pre_count");
-    pre_count.innerHTML+=100;
+    pre_count.innerHTML+=0;
 
 
 
@@ -198,7 +198,7 @@ table.addEventListener("keydown", function(event) {
             if (table.rows[currentRow].cells[currentCol].innerHTML=="c"){
                 table.rows[currentRow].cells[currentCol].innerHTML="2大"
             }
-            if (data==""){
+            if (table.rows[currentRow].cells[currentCol].innerHTML==""){
                 data = table.rows[currentRow].cells[currentCol].innerText=0
             }
             currentCol++;
@@ -228,6 +228,13 @@ table.addEventListener("keydown", function(event) {
             result+=parseInt(fish_case);
             result=Math.round(result * 10)/ 10
             table.rows[currentRow].cells[currentCol].innerText=result
+
+            data2 = current_count.innerHTML
+            data2 = parseFloat(data2)
+            data2+=result
+
+            current_count.innerHTML=data2
+
 
             // 當第一行欄位沒有數值時,不再移動到下一行
             if (table.rows[currentRow].cells[0].innerText!=""){

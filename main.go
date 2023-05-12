@@ -3,8 +3,13 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
+
+	"database/sql"
+	_ "database/sql"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Fish struct {
@@ -23,6 +28,7 @@ type FishList struct {
 type Customer struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
+	Date string `json:"date"`
 }
 type CustomerList struct {
 	Customers []Customer `json:"customers"`
@@ -34,7 +40,57 @@ type Product struct {
 	Key  string `json:"key"`
 }
 
+var DB_Name = "test.sqlite"
+
+func init_db() {
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer db.Close()
+
+	// 建立 today_customer 資料表
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS today_customer (
+		ID INTEGER,
+		Name TEXT,
+		Setting Bool,
+		Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		TotalArrears Float,
+		TodayArrears Float
+	)`)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("today_customer 資料表建立成功")
+}
+
+func insertSelectCustomer(name string, id int, date string) error {
+
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	defer db.Close()
+
+	now := time.Now()
+	date_now := now.Format("2006-01-02")
+
+	_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears) VALUES (?, ?, 0,?,?,?)`, name, id, date_now, 102.55, 103.55)
+	if err != nil {
+		return fmt.Errorf("failed to insert customer: %v", err)
+	}
+	return nil
+}
+
 func main() {
+
+	// 初始化 DB
+	init_db()
+
 	router := gin.Default()
 
 	router.LoadHTMLGlob("templates/*")
@@ -121,9 +177,9 @@ func handlePostFish(c *gin.Context) {
 func handleCustome(c *gin.Context) {
 	customers := []Customer{}
 
-	for i := 1; i <= 60; i++ {
+	for i := 1; i <= 120; i++ {
 		name := fmt.Sprintf("測試員(%d)", i)
-		customers = append(customers, Customer{i, name})
+		customers = append(customers, Customer{i, name, ""})
 	}
 	c.JSON(http.StatusOK, customers)
 }
@@ -133,6 +189,9 @@ func set_today_customer_name(c *gin.Context) {
 	if err := c.BindJSON(&customers); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
+	}
+	for _, customer := range customers {
+		insertSelectCustomer(customer.Name, customer.ID, customer.Date)
 	}
 
 	fmt.Println(customers)
