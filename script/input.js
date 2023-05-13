@@ -48,6 +48,43 @@ window.onload = function() {
     .catch(error => console.error(error)); // 若發生錯誤則顯示錯誤訊息
 
 
+
+
+    const url = "/get_product_name";
+    const table2 = document.getElementById("fish_table");
+    let currentX = 0;
+    let currentY = 0;
+
+    fetch(url)
+      .then((response) => response.json())
+      .then((data) => {
+        let i = 0;
+        while (i < data.length) {
+          const tr = document.createElement("tr");
+          for (let j = 0; j < 8; j++) {
+            if (i >= data.length) {
+              break;
+            }
+            const td = document.createElement("td");
+
+            //  對齊
+            td.innerText = data[i].key.padEnd(2," ");
+            td.innerText +=") "
+            if (data[i].name.length==1){
+                td.innerText += data[i].name.padEnd(2," ");
+                td.innerText += "__"
+            }else{
+                td.innerText += data[i].name.padEnd(2," ");
+            }
+            tr.appendChild(td);
+            i++;
+          }
+          table2.appendChild(tr);
+        }
+        table2.rows[currentY].cells[currentX].classList.add("focus");
+      });
+
+
 };
 
 myButton.onclick = function() {
