@@ -193,7 +193,7 @@ table.addEventListener("keydown", function(event) {
             data = table.rows[currentRow].cells[currentCol].innerText
 
             if (data==""){
-                data = table.rows[currentRow].cells[currentCol].innerText=0
+                data = table.rows[currentRow].cells[currentCol].innerText=1
             }
 
             table.rows[currentRow].cells[currentCol].focus();
@@ -221,10 +221,11 @@ table.addEventListener("keydown", function(event) {
             }
             currentCol++;
             table.rows[currentRow].cells[currentCol].focus();
-            break;
         }
         // 第七格 (總價)
         if (currentCol == 6){
+
+           
 
             // 檢查欄位是否都有數值
             check_empty=1
@@ -243,15 +244,24 @@ table.addEventListener("keydown", function(event) {
                 // 重量
                 weight = table.rows[currentRow].cells[2].innerText
 
-                // 小籠 60
+
+                // 分
+                multiple = table.rows[currentRow].cells[4].innerText
+
+                if (multiple =="1/2"){
+                    multiple = 0.5
+                }
+
+
+                // 小籠 40
                 if (table.rows[currentRow].cells[5].innerText == "小"){
-                    fish_case=30
+                    fish_case=40
                 // 大籠 60
                 }else if(table.rows[currentRow].cells[5].innerText == "大"){
                     fish_case=60
                 // 兩個小籠 30 *2
                 }else if(table.rows[currentRow].cells[5].innerText == "2小"){
-                    fish_case=60
+                    fish_case=80
                 // 兩個大籠 60 * 2
                 }else if(table.rows[currentRow].cells[5].innerText == "2大"){
                     fish_case=120
@@ -265,18 +275,23 @@ table.addEventListener("keydown", function(event) {
                 // 將結果加上籠子重量
                 result+=parseInt(fish_case);
                 // 四捨五入
-                result=Math.round(result * 10)/ 10
-                // 回填結果
-                table.rows[currentRow].cells[currentCol].innerText=result
-                // 取得今天帳目
-                today_count = current_count.innerHTML
+                result=Math.round(result)
 
-                // 加總帳目 取小數點四捨五入後一位
-                today_count = parseFloat(today_count)
-                today_count+=result
+                result=Math.round(result*multiple)
 
-                // 回填帳目
-                current_count.innerHTML=today_count
+                table.rows[currentRow].cells[6].innerHTML = result
+
+                // 每次進行計算後累積當前結果
+                sum=0
+                for (i=1 ;i<table.rows.length;i++){
+                    sum+=Math.round(table.rows[i].cells[6].innerText)
+                }
+                current_count.innerHTML=sum
+
+                // 檢查是否為最後一列
+                if(table.rows.length-1 != currentRow){
+                    break
+                }
                 
                 // 新增下一列,繼續進行運作
                 var newRow = table.insertRow(-1);
