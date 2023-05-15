@@ -1,9 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"html/template"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
 	"database/sql"
@@ -122,9 +127,7 @@ func main() {
 	})
 
 	// 列印頁面
-	router.GET("/print", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "print.html", gin.H{})
-	})
+	router.GET("/print", generatePrintHTML)
 
 	// 帳目狀況
 	router.GET("/status", func(c *gin.Context) {
@@ -350,4 +353,96 @@ func handleProduct(c *gin.Context) {
 		{100, "牛舌", "99"},
 	}
 	c.JSON(http.StatusOK, customers)
+}
+func WriteToFile(filename string, data string) error {
+	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// 寫入資料
+	_, err = file.WriteString(data + "\n")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func fix_print() {
+
+	file, err := os.Open("data2.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+
+	index := 1
+	for scanner.Scan() {
+
+		/*
+			if index%60 == 0 {
+				WriteToFile("data.txt", "")
+				WriteToFile("data.txt", "")
+				WriteToFile("data.txt", "")
+				index = index + 1
+			}
+		*/
+		line := scanner.Text()
+		WriteToFile("data.txt", strconv.Itoa(index)+"."+line)
+		index = index + 1
+
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	/*
+		for i := 1; i < 120; i++ {
+
+			if i%60 == 0 {
+				WriteToFile("data.txt", "")
+				WriteToFile("data.txt", "")
+				WriteToFile("data.txt", "")
+				continue
+			}
+
+			if i == 1 {
+				WriteToFile("data.txt", "###############################")
+			} else if i == 2 {
+				WriteToFile("data.txt", "###############################")
+			} else {
+				WriteToFile("data.txt", "<<"+strconv.Itoa(i))
+			}
+		}
+	*/
+}
+
+func generatePrintHTML(c *gin.Context) {
+
+	fix_print()
+	// 讀取 txt 檔案內容
+	content, err := ioutil.ReadFile("data.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 定義模板
+	tmpl := template.Must(template.ParseFiles("templates/print.html"))
+
+	// 將資料傳遞給模板
+	data := struct {
+		Content string
+	}{
+		Content: string(content),
+	}
+
+	// 產生 HTML
+	err = tmpl.Execute(c.Writer, data)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
