@@ -31,6 +31,7 @@
     <button id="myButton">傳送表單</button>
     <script>
 
+      let custome_index=0;
       myButton.onclick = function() {
           const form = document.getElementById('myTable');
           const rows = form.getElementsByTagName('tr');
@@ -45,10 +46,14 @@
                   const id=cells[j].innerText;
                   const name=cells[j].innerText;
 
+                  tempSpan1 = cells[j].querySelector('span1');
+                  tempSpan2 = cells[j].querySelector('span2');
+
                   data.push({
                   id: parseInt(i+j),
-                  name: name,
+                  name: tempSpan1.innerText,
                   date: new Date(2023, 4, 7, 15, 45, 0, 0),
+                  sort: tempSpan2.innerText,
                   });
                 }
               }
@@ -75,7 +80,17 @@
                 break;
               }
               const td = document.createElement("td");
-              td.innerText = data[i].name;
+              //td.innerText = data[i].name;
+              // 新增暫存標籤
+              const tempSpan1=document.createElement("span1");
+              tempSpan1.innerText=data[i].name;
+              td.append(tempSpan1);
+
+              // 新增暫存標籤
+              const tempSpan2=document.createElement("span2");
+              tempSpan2.innerText="";
+              td.append(tempSpan2);
+
               tr.appendChild(td);
               i++;
             }
@@ -116,6 +131,14 @@
             break;
           case "Enter":
             table.rows[currentY].cells[currentX].style.backgroundColor = 'red';
+            //table_position=table.rows[currentY].cells[currentX]
+            ///tempSpan = table_position.querySelector('span');​
+            //tempSpan.innerText=""
+            test=table.rows[currentY].cells[currentX];
+            tempSpan2 = test.querySelector('span2');
+            custome_index+=1;
+            tempSpan2.innerText=custome_index;
+
 
             break;
           case " ":

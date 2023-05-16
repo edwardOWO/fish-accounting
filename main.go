@@ -38,6 +38,7 @@ type Customer struct {
 	Date         string `json:"date"`
 	TotalArrears string `json:"totalArrears"`
 	TodayArrears string `json:"todayArrears"`
+	Sort         string `json:"sort"`
 }
 type CustomerList struct {
 	Customers []Customer `json:"customers"`
@@ -66,7 +67,8 @@ func init_db() {
 		Setting Bool,
 		Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		TotalArrears Float,
-		TodayArrears Float
+		TodayArrears Float,
+		Sort INTEGER
 	)`)
 	if err != nil {
 		fmt.Println(err)
@@ -76,7 +78,7 @@ func init_db() {
 	fmt.Println("today_customer 資料表建立成功")
 }
 
-func insertSelectCustomer(name string, id int, date string) error {
+func insertSelectCustomer(name string, id int, date string, sort int) error {
 
 	db, err := sql.Open("sqlite3", DB_Name)
 	if err != nil {
@@ -88,7 +90,7 @@ func insertSelectCustomer(name string, id int, date string) error {
 	now := time.Now()
 	date_now := now.Format("2006-01-02")
 
-	_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears) VALUES (?, ?, 0,?,?,?)`, name, id, date_now, 9000, 10000)
+	_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears,Sort) VALUES (?, ?, 0,?,?,?,?)`, name, id, date_now, 9000, 10000, sort)
 	if err != nil {
 		return fmt.Errorf("failed to insert customer: %v", err)
 	}
@@ -189,7 +191,7 @@ func handleCustome(c *gin.Context) {
 
 	for i := 1; i <= 30; i++ {
 		name := fmt.Sprintf("測試員(%d)", i)
-		customers = append(customers, Customer{i, name, "", "", "", ""})
+		customers = append(customers, Customer{i, name, "", "", "", "", ""})
 	}
 	c.JSON(http.StatusOK, customers)
 }
@@ -201,7 +203,8 @@ func set_today_customer_name(c *gin.Context) {
 		return
 	}
 	for _, customer := range customers {
-		insertSelectCustomer(customer.Name, customer.ID, customer.Date)
+		sort, _ := strconv.Atoi(customer.Sort)
+		insertSelectCustomer(customer.Name, customer.ID, customer.Date, sort)
 	}
 
 	fmt.Println(customers)
@@ -222,7 +225,7 @@ func get_today_customer_name(c *gin.Context) {
 	today := time.Now().Format("2006-01-02")
 
 	// 查詢今天的 today_customer 資料
-	rows, err := db.Query("SELECT * FROM today_customer WHERE date=? ORDER BY ID LIMIT 1", today)
+	rows, err := db.Query("SELECT * FROM today_customer WHERE date=? ORDER BY Sort LIMIT 1", today)
 	if err != nil {
 		log.Fatal(err)
 	}
