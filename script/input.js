@@ -16,6 +16,7 @@ window.onload = function() {
 
 
 
+
     // 使用 fetch() 方法呼叫 API
     fetch('/get_product_name')
     .then(response => response.json()) // 將回傳的資料轉為 JSON 格式
@@ -29,7 +30,7 @@ window.onload = function() {
         // 顯示 dictionary 變數內容
         console.log(dictionary);
     })
-    .catch(error => console.error(error)); // 若發生錯誤則顯示錯誤訊息
+    .catch(error => console.error()); // 若發生錯誤則顯示錯誤訊息
 
 
     // 使用 fetch() 方法呼叫 API
@@ -45,8 +46,14 @@ window.onload = function() {
         // 顯示 dictionary 變數內容
         console.log(dictionary);
     })
-    .catch(error => console.error(error)); // 若發生錯誤則顯示錯誤訊息
+    .catch(error => {
+        console.error(error);
+        // 發生錯誤時表示已經沒有客戶,因此轉跳回主頁面
+        alert("所有客戶已經處理完成,轉跳回主頁面")
+        window.location= "http://127.0.0.1:8080/login";
+    });
 
+    
 
 
 
@@ -100,27 +107,43 @@ myButton.onclick = function() {
         continue
         }
         const date = cells[0].innerText;
-        const fish_name = cells[1].innerText;
+        const fishName = cells[1].innerText;
         const weight = cells[2].innerText;
         const price = cells[3].innerText;
         const fraction = cells[4].innerText;
         const package = cells[5].innerText;
-        const total_price= cells[6].innerText;
+        const totalPrice= cells[6].innerText;
+
+        // 取得客戶資料
+        var customer = document.getElementById("customer");
+        const customerName= customer.innerText;
 
         data.push({
         date: date,
-        fish_name: fish_name,
+        fishName: fishName,
         weight: weight,
         price: price,
         fraction: fraction,
         package: package,
-        total_price: total_price,
+        totalPrice: totalPrice,
+        customerName: customerName,
         });
     }
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/fish');
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     xhr.send(JSON.stringify(data));
+
+    
+
+    var customer = document.getElementById("customer");
+
+
+        
+        // 重整讀取下一個客戶的資料
+    window.location.reload();window.location.reload();
+
+    
 };
 
 
