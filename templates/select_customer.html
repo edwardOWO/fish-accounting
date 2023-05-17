@@ -27,6 +27,10 @@
       </style>
   </head>
   <body>
+    <div>
+      <h>記帳日期:</h>
+      <h id="currentDate">記帳日期:</h>
+    </div>
     <table id="myTable"></table>
     <button id="myButton">傳送表單</button>
     <script>
@@ -43,6 +47,7 @@
               for (let j = 0; j < cells.length; j++){
 
                 if (cells[j].style.backgroundColor == "red"){
+                  currentDate = document.getElementById("currentDate");
                   const id=cells[j].innerText;
                   const name=cells[j].innerText;
 
@@ -52,7 +57,7 @@
                   data.push({
                   id: parseInt(i+j),
                   name: tempSpan1.innerText,
-                  date: new Date(2023, 4, 7, 15, 45, 0, 0),
+                  date: currentDate.innerText,
                   sort: tempSpan2.innerText,
                   });
                 }
@@ -157,6 +162,23 @@
           }
         }
         table.rows[currentY].cells[currentX].classList.add("focus");
+      }
+
+
+      // 設定日期
+      function showPrompt() {
+        var userInput = prompt("輸入記帳日期");
+        if (userInput !== null) {
+          alert("記帳日期為：" + userInput);
+          
+          const currentDate = document.getElementById("currentDate");
+          currentDate.innerText = userInput
+        }
+      }
+      window.onload = function() {
+        
+
+        showPrompt()
       }
     </script>
     <style>
