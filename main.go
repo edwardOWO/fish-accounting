@@ -88,10 +88,10 @@ func insertSelectCustomer(name string, id int, date string, sort int) error {
 	}
 	defer db.Close()
 
-	now := time.Now()
-	date_now := now.Format("2006-01-02")
+	//now := time.Now()
+	//date_now := now.Format("2006-01-02")
 
-	_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears,Sort) VALUES (?, ?, 0,?,?,?,?)`, name, id, date_now, 0, 0, sort)
+	_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears,Sort) VALUES (?, ?, 0,?,?,?,?)`, name, id, date, 0, 0, sort)
 	if err != nil {
 		return fmt.Errorf("failed to insert customer: %v", err)
 	}
@@ -243,11 +243,12 @@ func get_today_customer_name(c *gin.Context) {
 	var todayCustomers []Customer
 
 	// 取得今天日期
-	today := time.Now().Format("2006-01-02")
+	//today := time.Now().Format("2006-01-02")
 
 	// 查詢今天的 today_customer 資料
 
-	rows, err := db.Query("SELECT * FROM today_customer WHERE date=? AND Setting=0 ORDER BY Sort ASC LIMIT 1", today)
+	//rows, err := db.Query("SELECT * FROM today_customer WHERE date=? AND Setting=0 ORDER BY Sort ASC LIMIT 1", today)
+	rows, err := db.Query("SELECT * FROM today_customer WHERE Setting=0 ORDER BY Sort ASC LIMIT 1")
 	if err != nil {
 		log.Fatal(err)
 	}
