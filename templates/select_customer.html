@@ -62,6 +62,9 @@
           xhr.open('POST', '/set_today_customer_name');
           xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
           xhr.send(JSON.stringify(data));
+
+          alert("選取 "+custome_index+"位客戶,轉跳到輸入頁面")
+          window.location= "http://127.0.0.1:8080/input";
       };
 
       const url = "/get_customer_name";
