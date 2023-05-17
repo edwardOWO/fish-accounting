@@ -19,27 +19,27 @@ import (
 )
 
 type Fish struct {
-	Date         string `json:"date"`
-	FishName     string `json:"fishName"`
-	Weight       string `json:"weight"`
-	Price        string `json:"price"`
-	Fraction     string `json:"fraction"`
-	Package      string `json:"package"`
-	TotalPrice   string `json:"totalPrice"`
-	CustomerName string `json:"customerName"`
+	Date         time.Time `json:"date"`
+	FishName     string    `json:"fishName"`
+	Weight       string    `json:"weight"`
+	Price        string    `json:"price"`
+	Fraction     string    `json:"fraction"`
+	Package      string    `json:"package"`
+	TotalPrice   string    `json:"totalPrice"`
+	CustomerName string    `json:"customerName"`
 }
 
 type FishList struct {
 	Fishes []Fish `json:"fishes"`
 }
 type Customer struct {
-	ID           int    `json:"id"`
-	Name         string `json:"name"`
-	Setting      string `json:"setting"`
-	Date         string `json:"date"`
-	TotalArrears string `json:"totalArrears"`
-	TodayArrears string `json:"todayArrears"`
-	Sort         string `json:"sort"`
+	ID           int       `json:"id"`
+	Name         string    `json:"name"`
+	Setting      string    `json:"setting"`
+	Date         time.Time `json:"date"`
+	TotalArrears string    `json:"totalArrears"`
+	TodayArrears string    `json:"todayArrears"`
+	Sort         string    `json:"sort"`
 }
 type CustomerList struct {
 	Customers []Customer `json:"customers"`
@@ -79,7 +79,7 @@ func init_db() {
 	fmt.Println("today_customer 資料表建立成功")
 }
 
-func insertSelectCustomer(name string, id int, date string, sort int) error {
+func insertSelectCustomer(name string, id int, date time.Time, sort int) error {
 
 	db, err := sql.Open("sqlite3", DB_Name)
 	if err != nil {
@@ -190,11 +190,19 @@ func handlePostFish(c *gin.Context) {
 		return
 	}
 
-	now := time.Now()
-	dateNow := now.Format("2006-01-02")
-
 	query := "UPDATE today_customer SET Setting=? WHERE date=? AND Name=?"
-	result, err := db.Exec(query, 1, dateNow, fishes[0].CustomerName)
+	fmt.Print(fishes[0].Date.UTC().Format("2006-01-02 15:04:05-07:00"))
+
+	fmt.Println("############")
+	fmt.Println(fishes[0].Date.Local().Day())
+	fmt.Println("############")
+
+	// 讀取 javasccript 時,讀取到的日期一律會少一天,目前尚未找到原因,先使用加一天的方法進行補正
+	fix_day := fishes[0].Date.AddDate(0, 0, 1)
+	date := time.Date(fix_day.Local().Year(), fix_day.Local().Month(), fix_day.Local().Day(), 0, 0, 0, 0, time.Local)
+	formattedDate := date.Format("2006-01-02 15:04:05-07:00")
+
+	result, err := db.Exec(query, 1, formattedDate, fishes[0].CustomerName)
 
 	fmt.Print(result)
 
@@ -212,7 +220,8 @@ func handleCustome(c *gin.Context) {
 
 	for i := 1; i <= 30; i++ {
 		name := fmt.Sprintf("測試員(%d)", i)
-		customers = append(customers, Customer{i, name, "", "", "", "", ""})
+		now := time.Now()
+		customers = append(customers, Customer{i, name, "", now, "", "", ""})
 	}
 	c.JSON(http.StatusOK, customers)
 }

@@ -14,7 +14,8 @@ window.onload = function() {
     var pre_count = document.getElementById("pre_count");
     pre_count.innerHTML=0;
 
-
+    
+    
 
 
     // 使用 fetch() 方法呼叫 API
@@ -41,6 +42,10 @@ window.onload = function() {
         for (let i = 0; i < data.length; i++) {
             customer.innerHTML=data[i].name
             pre_count.innerHTML=parseFloat(data[i].totalArrears)
+            var currentDate = document.getElementById("currentDate");
+            var date = new Date(data[i].date);
+            var formattedDate = date.toLocaleDateString();
+            currentDate.innerText=formattedDate;
         }
 
         // 顯示 dictionary 變數內容
@@ -106,7 +111,7 @@ myButton.onclick = function() {
         if (cells[0].innerText ==""){
         continue
         }
-        const date = cells[0].innerText;
+        const date = new Date(cells[0].innerText);
         const fishName = cells[1].innerText;
         const weight = cells[2].innerText;
         const price = cells[3].innerText;
@@ -201,9 +206,14 @@ table.addEventListener("keydown", function(event) {
 
         // 第一格 (產生日期)
         if (currentCol == 0){
-            var today = new Date();
-            var mmdd = (today.getMonth() + 1).toString().padStart(2, '0') + today.getDate().toString().padStart(2, '0');
-            table.rows[currentRow].cells[currentCol].innerText = mmdd;
+            //var today = new Date();
+            //var mmdd = (today.getMonth() + 1).toString().padStart(2, '0') + today.getDate().toString().padStart(2, '0');
+            
+            currentDate = document.getElementById("currentDate");
+            //var today = Date(currentDate.innerText)
+            //var mmdd = (today.getMonth() + 1).toString().padStart(2, '0') + today.getDate().toString().padStart(2, '0');
+
+            table.rows[currentRow].cells[currentCol].innerText = currentDate.innerText;
             currentCol++;
             table.rows[currentRow].cells[currentCol].focus();
             break;

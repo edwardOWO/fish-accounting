@@ -47,6 +47,12 @@
               for (let j = 0; j < cells.length; j++){
 
                 if (cells[j].style.backgroundColor == "red"){
+
+
+                  var timestamp = Date.parse(currentDate.innerText);
+                  var date = new Date(timestamp);
+
+
                   currentDate = document.getElementById("currentDate");
                   const id=cells[j].innerText;
                   const name=cells[j].innerText;
@@ -57,7 +63,7 @@
                   data.push({
                   id: parseInt(i+j),
                   name: tempSpan1.innerText,
-                  date: currentDate.innerText,
+                  date: date,
                   sort: tempSpan2.innerText,
                   });
                 }
@@ -167,11 +173,13 @@
 
       // 設定日期
       function showPrompt() {
-        var userInput = prompt("輸入記帳日期");
+       
         if (userInput !== null) {
-          alert("記帳日期為：" + userInput);
-          
+          var today = new Date();
+          var yyyymmdd = (today.getFullYear()).toString().padStart(4, '0')+(today.getMonth() + 1).toString().padStart(2, '0') + today.getDate().toString().padStart(2, '0')
+          var userInput = prompt("輸入記帳日期", yyyymmdd);
           const currentDate = document.getElementById("currentDate");
+          alert("記帳日期為：" + userInput);
           currentDate.innerText = userInput
         }
       }
