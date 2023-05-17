@@ -19,13 +19,14 @@ import (
 )
 
 type Fish struct {
-	Date       string `json:"date"`
-	FishName   string `json:"fish_name"`
-	Weight     string `json:"weight"`
-	Price      string `json:"price"`
-	Fraction   string `json:"fraction"`
-	Package    string `json:"package"`
-	TotalPrice string `json:"total_price"`
+	Date         string `json:"date"`
+	FishName     string `json:"fishName"`
+	Weight       string `json:"weight"`
+	Price        string `json:"price"`
+	Fraction     string `json:"fraction"`
+	Package      string `json:"package"`
+	TotalPrice   string `json:"totalPrice"`
+	CustomerName string `json:"customerName"`
 }
 
 type FishList struct {
@@ -90,7 +91,7 @@ func insertSelectCustomer(name string, id int, date string, sort int) error {
 	now := time.Now()
 	date_now := now.Format("2006-01-02")
 
-	_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears,Sort) VALUES (?, ?, 0,?,?,?,?)`, name, id, date_now, 9000, 10000, sort)
+	_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears,Sort) VALUES (?, ?, 0,?,?,?,?)`, name, id, date_now, 0, 0, sort)
 	if err != nil {
 		return fmt.Errorf("failed to insert customer: %v", err)
 	}
@@ -112,7 +113,7 @@ func main() {
 	})
 
 	// 登入頁面
-	router.POST("/login", func(c *gin.Context) {
+	router.GET("/login", func(c *gin.Context) {
 
 		c.HTML(http.StatusOK, "menu.html", gin.H{})
 
@@ -175,10 +176,30 @@ func main() {
 }
 
 func handlePostFish(c *gin.Context) {
+	// 更新客戶資料
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	// 更新今日詳細帳目
 	var fishes []Fish
 	if err := c.BindJSON(&fishes); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
+	}
+
+	now := time.Now()
+	dateNow := now.Format("2006-01-02")
+
+	query := "UPDATE today_customer SET Setting=? WHERE date=? AND Name=?"
+	result, err := db.Exec(query, 1, dateNow, fishes[0].CustomerName)
+
+	fmt.Print(result)
+
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	fmt.Println(fishes)
@@ -225,7 +246,8 @@ func get_today_customer_name(c *gin.Context) {
 	today := time.Now().Format("2006-01-02")
 
 	// 查詢今天的 today_customer 資料
-	rows, err := db.Query("SELECT * FROM today_customer WHERE date=? ORDER BY Sort LIMIT 1", today)
+
+	rows, err := db.Query("SELECT * FROM today_customer WHERE date=? AND Setting=0 ORDER BY Sort ASC LIMIT 1", today)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -234,7 +256,7 @@ func get_today_customer_name(c *gin.Context) {
 	// 迭代查詢結果，並將結果加入 slice
 	for rows.Next() {
 		var customer Customer
-		err := rows.Scan(&customer.ID, &customer.Name, &customer.Setting, &customer.Date, &customer.TodayArrears, &customer.TotalArrears)
+		err := rows.Scan(&customer.ID, &customer.Name, &customer.Setting, &customer.Date, &customer.TodayArrears, &customer.TotalArrears, &customer.Sort)
 		if err != nil {
 			log.Fatal(err)
 		}
