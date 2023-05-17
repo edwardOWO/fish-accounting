@@ -50,7 +50,7 @@ window.onload = function() {
         console.error(error);
         // 發生錯誤時表示已經沒有客戶,因此轉跳回主頁面
         alert("所有客戶已經處理完成,轉跳回主頁面")
-        window.location= "http://127.0.0.1:8080/input";
+        window.location= "http://127.0.0.1:8080/login";
     });
 
     
