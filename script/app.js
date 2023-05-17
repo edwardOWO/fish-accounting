@@ -26,6 +26,10 @@ fetch(url)
   });
 
 
+
+
+
+
 var currentRow = 1;
 var currentCol = 0;
 
