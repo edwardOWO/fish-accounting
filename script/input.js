@@ -14,10 +14,6 @@ window.onload = function() {
     var pre_count = document.getElementById("pre_count");
     pre_count.innerHTML=0;
 
-    
-    
-
-
     // 使用 fetch() 方法呼叫 API
     fetch('/get_product_name')
     .then(response => response.json()) // 將回傳的資料轉為 JSON 格式
@@ -46,6 +42,9 @@ window.onload = function() {
             var date = new Date(data[i].date);
             var formattedDate = date.toLocaleDateString();
             currentDate.innerText=formattedDate;
+            var customerID = document.getElementById("customerID");
+            customerID.innerText=data[i].id
+            
         }
 
         // 顯示 dictionary 變數內容
@@ -57,10 +56,6 @@ window.onload = function() {
         alert("所有客戶已經處理完成,轉跳回主頁面")
         window.location= "http://127.0.0.1:8080/login";
     });
-
-    
-
-
 
     const url = "/get_product_name";
     const table2 = document.getElementById("fish_table");
@@ -121,31 +116,32 @@ myButton.onclick = function() {
 
         // 取得客戶資料
         var customer = document.getElementById("customer");
-        const customerName= customer.innerText;
+        const customerName = customer.innerText;
+
+        var customerID = document.getElementById("customerID");
+        id = customerID.innerText;
+
 
         data.push({
+        id: parseInt(id),
         date: date,
         fishName: fishName,
-        weight: weight,
-        price: price,
-        fraction: fraction,
+        weight: parseFloat(weight),
+        price: parseInt(price),
+        fraction: parseFloat(fraction),
         package: package,
-        totalPrice: totalPrice,
+        totalPrice: parseInt(totalPrice),
         customerName: customerName,
         });
     }
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/fish');
+    xhr.open('POST', '/accountDetail');
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     xhr.send(JSON.stringify(data));
 
-    
-
     var customer = document.getElementById("customer");
-
-
-        
-        // 重整讀取下一個客戶的資料
+    
+    // 重整讀取下一個客戶的資料
     window.location.reload();window.location.reload();
 
     

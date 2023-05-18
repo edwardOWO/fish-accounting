@@ -19,13 +19,14 @@ import (
 )
 
 type Fish struct {
+	ID           int       `json:"id"`
 	Date         time.Time `json:"date"`
 	FishName     string    `json:"fishName"`
-	Weight       string    `json:"weight"`
-	Price        string    `json:"price"`
-	Fraction     string    `json:"fraction"`
+	Weight       float32   `json:"weight"`
+	Price        int       `json:"price"`
+	Fraction     float32   `json:"fraction"`
 	Package      string    `json:"package"`
-	TotalPrice   string    `json:"totalPrice"`
+	TotalPrice   int       `json:"totalPrice"`
 	CustomerName string    `json:"customerName"`
 }
 
@@ -37,9 +38,9 @@ type Customer struct {
 	Name         string    `json:"name"`
 	Setting      string    `json:"setting"`
 	Date         time.Time `json:"date"`
-	TotalArrears string    `json:"totalArrears"`
-	TodayArrears string    `json:"todayArrears"`
-	Sort         string    `json:"sort"`
+	TotalArrears int       `json:"totalArrears"`
+	TodayArrears int       `json:"todayArrears"`
+	Sort         int       `json:"sort"`
 }
 type CustomerList struct {
 	Customers []Customer `json:"customers"`
@@ -68,8 +69,26 @@ func init_db() {
 		Setting Bool,
 		Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		TotalArrears Float,
-		TodayArrears Float,
+		TodayArrears Int,
 		Sort INTEGER
+	)`)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// 建立 today_customer 資料表
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS accountDetail (
+		ID INTEGER,
+		CustomerName TEXT,
+		FishName TEXT,
+		Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		Price INTEGER,
+		Weight Float,
+		Fraction TEXT,
+		Package TEXT,
+		TotalPrice INTEGER,
+		Print Bool
 	)`)
 	if err != nil {
 		fmt.Println(err)
@@ -79,7 +98,7 @@ func init_db() {
 	fmt.Println("today_customer 資料表建立成功")
 }
 
-func insertSelectCustomer(name string, id int, date time.Time, sort int) error {
+func insertSelectCustomer(name string, id int, date time.Time, sort int, TodayArrears int) error {
 
 	db, err := sql.Open("sqlite3", DB_Name)
 	if err != nil {
@@ -87,9 +106,6 @@ func insertSelectCustomer(name string, id int, date time.Time, sort int) error {
 		return err
 	}
 	defer db.Close()
-
-	//now := time.Now()
-	//date_now := now.Format("2006-01-02")
 
 	_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears,Sort) VALUES (?, ?, 0,?,?,?,?)`, name, id, date, 0, 0, sort)
 	if err != nil {
@@ -152,8 +168,8 @@ func main() {
 		c.HTML(http.StatusOK, "account.html", gin.H{})
 	})
 
-	// 測試
-	router.POST("/fish", handlePostFish)
+	// 輸入帳目資料
+	router.POST("/accountDetail", handlePostFish)
 
 	// 取得客戶資訊
 	router.GET("/get_customer_name", handleCustome)
@@ -190,19 +206,32 @@ func handlePostFish(c *gin.Context) {
 		return
 	}
 
-	query := "UPDATE today_customer SET Setting=? WHERE date=? AND Name=?"
-	fmt.Print(fishes[0].Date.UTC().Format("2006-01-02 15:04:05-07:00"))
+	TodayArrears := 0
+	for _, detail := range fishes {
 
-	fmt.Println("############")
-	fmt.Println(fishes[0].Date.Local().Day())
-	fmt.Println("############")
+		// 讀取 javasccript 時,讀取到的日期一律會少一天,目前尚未找到原因,先使用加一天的方法進行補正
+		fix_day := detail.Date.AddDate(0, 0, 1)
+
+		TodayArrears += detail.TotalPrice
+
+		// 將詳細帳單輸入到欄位中
+		_, err = db.Exec(`INSERT INTO accountDetail (ID,CustomerName, Date, FishName, Weight,Price,Fraction,Package,TotalPrice,Print) VALUES (?,?, ?, ?,?,?,?,?,?,?)`, detail.ID, detail.CustomerName, fix_day, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false)
+		if err != nil {
+			fmt.Print(err.Error())
+		}
+
+	}
+
+	// 表記今天的帳目已經完成
+	query := "UPDATE today_customer SET Setting=?,TodayArrears=? WHERE date=? AND Name=?"
+	fmt.Print(fishes[0].Date.UTC().Format("2006-01-02 15:04:05-07:00"))
 
 	// 讀取 javasccript 時,讀取到的日期一律會少一天,目前尚未找到原因,先使用加一天的方法進行補正
 	fix_day := fishes[0].Date.AddDate(0, 0, 1)
 	date := time.Date(fix_day.Local().Year(), fix_day.Local().Month(), fix_day.Local().Day(), 0, 0, 0, 0, time.Local)
 	formattedDate := date.Format("2006-01-02 15:04:05-07:00")
 
-	result, err := db.Exec(query, 1, formattedDate, fishes[0].CustomerName)
+	result, err := db.Exec(query, 1, TodayArrears, formattedDate, fishes[0].CustomerName)
 
 	fmt.Print(result)
 
@@ -221,7 +250,7 @@ func handleCustome(c *gin.Context) {
 	for i := 1; i <= 30; i++ {
 		name := fmt.Sprintf("測試員(%d)", i)
 		now := time.Now()
-		customers = append(customers, Customer{i, name, "", now, "", "", ""})
+		customers = append(customers, Customer{i, name, "", now, 0, 0, 0})
 	}
 	c.JSON(http.StatusOK, customers)
 }
@@ -233,8 +262,7 @@ func set_today_customer_name(c *gin.Context) {
 		return
 	}
 	for _, customer := range customers {
-		sort, _ := strconv.Atoi(customer.Sort)
-		insertSelectCustomer(customer.Name, customer.ID, customer.Date, sort)
+		insertSelectCustomer(customer.Name, customer.ID, customer.Date, customer.Sort, customer.TodayArrears)
 	}
 
 	fmt.Println(customers)
