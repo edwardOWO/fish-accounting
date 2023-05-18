@@ -174,6 +174,9 @@ func main() {
 	// 取得客戶資訊
 	router.GET("/get_customer_name", handleCustome)
 
+	// 取得帳目資訊
+	router.GET("/get_all_account_customer", getAllAccountCustomer)
+
 	// 選擇今天客戶
 	router.POST("/set_today_customer_name", set_today_customer_name)
 
@@ -253,6 +256,41 @@ func handleCustome(c *gin.Context) {
 		customers = append(customers, Customer{i, name, "", now, 0, 0, 0})
 	}
 	c.JSON(http.StatusOK, customers)
+}
+
+func getAllAccountCustomer(c *gin.Context) {
+
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	var getAllAccountCustomer []Customer
+
+	rows, err := db.Query("SELECT * FROM today_customer where Setting =1")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	// 迭代查詢結果，並將結果加入 slice
+	for rows.Next() {
+		var customer Customer
+		err := rows.Scan(&customer.ID, &customer.Name, &customer.Setting, &customer.Date, &customer.TodayArrears, &customer.TotalArrears, &customer.Sort)
+		if err != nil {
+			log.Fatal(err)
+		}
+		getAllAccountCustomer = append(getAllAccountCustomer, customer)
+	}
+
+	// 檢查是否有迭代中發生錯誤
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	c.JSON(http.StatusOK, getAllAccountCustomer)
+
 }
 
 func set_today_customer_name(c *gin.Context) {
