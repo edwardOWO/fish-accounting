@@ -35,8 +35,8 @@
 
 <body onload="onPageLoad()">
   <div>
-    <h>記帳日期:</h>
-    <h id="currentDate">記帳日期:</h>
+    <h>當前帳款:</h>
+    <h id="currentArrears"></h>
   </div>
   <table id="myTable"></table>
   <button id="myButton">傳送表單</button>
@@ -59,62 +59,74 @@
     function onPageLoad() {
       const table2 = document.getElementById("detailTable");
       detailTable.style.display = "none";
+      firstCustomerTotal=0
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          let i = 0;
+          while (i < data.length) {
+            const tr = document.createElement("tr");
+            for (let j = 0; j < 10; j++) {
+              if (i >= data.length) {
+                break;
+              }
+              const td = document.createElement("td");
+              //td.innerText = data[i].name;
+              // 暫存 ID
+              const tempSpan0 = document.createElement("span0");
+              tempSpan0.innerText = data[i].id;
+              tempSpan0.style.display = "none";
+              td.append(tempSpan0);
+              // 暫存名字 ID
+              const tempSpan1 = document.createElement("span1");
+              tempSpan1.innerText = data[i].name;
+              td.append(tempSpan1);
+              // 暫存 totalArrears
+              const tempSpan2 = document.createElement("span2");
+              tempSpan2.innerText = data[i].totalArrears;
+              tempSpan2.style.display = "none";
+              td.append(tempSpan2);
+              tr.appendChild(td);
+              if (i==0){
+                document.getElementById("currentArrears").innerText =data[i].totalArrears;
+              }
+
+              i++;
+
+            }
+            table.appendChild(tr);
+          }
+          table.rows[currentY].cells[currentX].classList.add("focus");
+          window.addEventListener("keydown", handleKeyDown);
+        });
+
+        setTimeout(function() {
+          console.log("Pause for one second");
+        }, 1000);
+        
+        
     }
     let custome_index = 0;
-    myButton.onclick = function() {
-      window.location= "http://127.0.0.1:8080/login";
-    };
+    myButton.onclick = function() {};
     const url = "/get_customer_name";
     const table = document.getElementById("myTable");
     let currentX = 0;
     let currentY = 0;
-    fetch(url)
-      .then((response) => response.json())
-      .then((data) => {
-        let i = 0;
-        while (i < data.length) {
-          const tr = document.createElement("tr");
-          for (let j = 0; j < 10; j++) {
-            if (i >= data.length) {
-              break;
-            }
-            const td = document.createElement("td");
-            //td.innerText = data[i].name;
-            // 暫存 ID
-            const tempSpan0 = document.createElement("span0");
-            tempSpan0.innerText = data[i].id;
-            tempSpan0.style.display = "none";
-            td.append(tempSpan0);
-            // 暫存名字 ID
-            const tempSpan1 = document.createElement("span1");
-            tempSpan1.innerText = data[i].name;
-            td.append(tempSpan1);
-            // 暫存排序 Sort
-            const tempSpan2 = document.createElement("span2");
-            tempSpan2.innerText = "";
-            td.append(tempSpan2);
-            tr.appendChild(td);
-            i++;
-          }
-          table.appendChild(tr);
-        }
-        table.rows[currentY].cells[currentX].classList.add("focus");
-        window.addEventListener("keydown", handleKeyDown);
-      });
 
     function handleKeyDown(event) {
       switch (event.key) {
         case "Escape":
-          const table2 = document.getElementById("detailTable");
-          detailTable.style.display = "none";
           table.style.display = "";
+          const table2 = document.getElementById("detailTable");
+          if (detailTable.style.display == "none") {
+            window.location = "http://127.0.0.1:8080";
+          }
+          detailTable.style.display = "none";
           var detail_table3 = document.getElementById("detailTable");
           var rowCount = detail_table3.rows.length;
           for (var i = rowCount - 1; i > 0; i--) {
             detail_table3.deleteRow(i);
           }
-
-          
           break;
         case "ArrowUp":
           if (currentY > 0) {
@@ -146,57 +158,47 @@
           detailTable.style.display = "";
           table.style.display = "none";
           table_select_id = table.rows[currentY].cells[currentX].querySelector('span0');
-          
-          var url = "/accountDetail?id="+table_select_id.innerText
+          var url = "/accountDetail?id=" + table_select_id.innerText
           // 新增下一列,繼續進行運作
           var detail_table3 = document.getElementById("detailTable");
-          fetch(url)
-            .then(response => response.json())
-            .then(data => {
-              // 在这里处理返回的数据
-              data.forEach(item => {
-              // 在这里处理每个数据项
-              var newRow = detail_table3.insertRow(-1);
-              var cell = newRow.insertCell();
-              cell.contentEditable = false;
-              var dateObject = new Date(item.date);
-              var datePart = dateObject.toISOString().split('T')[0];
-              cell.innerText = datePart 
-              var cell = newRow.insertCell();
-              cell.contentEditable = false;
-              cell.innerText = item.fishName
-              var cell = newRow.insertCell();
-              cell.contentEditable = false;
-              cell.innerText = item.weight
-              var cell = newRow.insertCell();
-              cell.contentEditable = false;
-              cell.innerText = item.price
-              var cell = newRow.insertCell();
-              cell.contentEditable = false;
-              cell.innerText = item.fraction
-              var cell = newRow.insertCell();
-              cell.contentEditable = false;
-              cell.innerText = item.package 
-              var cell = newRow.insertCell();
-              cell.contentEditable = false;
-              cell.innerText = item.totalPrice
+          rowCount = detail_table3.rows.length;
+          // 檢查資料如果已經讀取不重複讀取
+          if (rowCount == 1) {
+            fetch(url)
+              .then(response => response.json())
+              .then(data => {
+                data.forEach(item => {
+                  var newRow = detail_table3.insertRow(-1);
+                  var cell = newRow.insertCell();
+                  cell.contentEditable = false;
+                  var dateObject = new Date(item.date);
+                  var datePart = dateObject.toISOString().split('T')[0];
+                  cell.innerText = datePart
+                  var cell = newRow.insertCell();
+                  cell.contentEditable = false;
+                  cell.innerText = item.fishName
+                  var cell = newRow.insertCell();
+                  cell.contentEditable = false;
+                  cell.innerText = item.weight
+                  var cell = newRow.insertCell();
+                  cell.contentEditable = false;
+                  cell.innerText = item.price
+                  var cell = newRow.insertCell();
+                  cell.contentEditable = false;
+                  cell.innerText = item.fraction
+                  var cell = newRow.insertCell();
+                  cell.contentEditable = false;
+                  cell.innerText = item.package
+                  var cell = newRow.insertCell();
+                  cell.contentEditable = false;
+                  cell.innerText = item.totalPrice
+                });
+              })
+              .catch(error => {
+                // 处理请求错误
+                alert(error)
               });
-            })
-            .catch(error => {
-              // 处理请求错误
-              console.error('Error:', error);
-            });
-
-          /*
-          for (var j = 0; j < 10; j++) {
-            var newRow = detail_table3.insertRow(-1);
-            for (var i = 0; i < detail_table3.rows[0].cells.length; i++) {
-              var cell = newRow.insertCell(i);
-              cell.contentEditable = false;
-              cell.innerText = ""
-            }
           }
-          */
           break;
         case " ":
           table.rows[currentY].cells[currentX].style.backgroundColor = 'white';
@@ -210,6 +212,8 @@
         }
       }
       table.rows[currentY].cells[currentX].classList.add("focus");
+      totalArrears = table.rows[currentY].cells[currentX].querySelector("span2");
+      document.getElementById("currentArrears").innerText = totalArrears.innerText;
     }
   </script>
   <style>

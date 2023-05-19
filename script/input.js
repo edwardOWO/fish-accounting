@@ -164,7 +164,6 @@ table.rows[currentRow].cells[currentCol].focus();
 table.addEventListener("keydown", function(event) {
 
     var key = event.which || event.keyCode;
-
     switch (key) {
         case 37: // left arrow
         if (currentCol > 0) {
@@ -381,6 +380,11 @@ table.addEventListener("keydown", function(event) {
         button=document.getElementById('myButton');
         button.click()
         alert(83)
+        break;
+
+
+        case 27: // clear col
+        alert(27)
         break;
     }
 });

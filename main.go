@@ -63,6 +63,17 @@ func init_db() {
 	defer db.Close()
 
 	// 建立 today_customer 資料表
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Customer (
+			ID INTEGER,
+			Name TEXT,
+			TotalArrears Int
+		)`)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// 建立 today_customer 資料表
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS today_customer (
 		ID INTEGER,
 		Name TEXT,
@@ -95,6 +106,8 @@ func init_db() {
 		return
 	}
 
+	// 建立初始化使用者
+
 	fmt.Println("today_customer 資料表建立成功")
 }
 
@@ -125,7 +138,7 @@ func main() {
 	router.Static("/script", "./script")
 
 	router.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", gin.H{})
+		c.HTML(http.StatusOK, "menu.html", gin.H{})
 	})
 
 	// 登入頁面
@@ -212,6 +225,7 @@ func handlePostFish(c *gin.Context) {
 		return
 	}
 
+	userID := 0
 	TodayArrears := 0
 	for _, detail := range fishes {
 
@@ -225,10 +239,10 @@ func handlePostFish(c *gin.Context) {
 		if err != nil {
 			fmt.Print(err.Error())
 		}
-
+		userID = detail.ID
 	}
 
-	// 表記今天的帳目已經完成
+	// 標記今天的帳目已經完成
 	query := "UPDATE today_customer SET Setting=?,TodayArrears=? WHERE date=? AND Name=?"
 	fmt.Print(fishes[0].Date.UTC().Format("2006-01-02 15:04:05-07:00"))
 
@@ -245,18 +259,41 @@ func handlePostFish(c *gin.Context) {
 		log.Fatal(err)
 	}
 
-	fmt.Println(fishes)
+	// 加總使用者帳款數
+
+	query = "UPDATE Customer SET TotalArrears=TotalArrears+? where id=?"
+	_, err = db.Exec(query, TodayArrears, userID)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	c.JSON(200, gin.H{"message": "Success"})
 }
 
+// 讀取所有客戶
 func handleCustome(c *gin.Context) {
 	customers := []Customer{}
 
-	for i := 1; i <= 30; i++ {
-		name := fmt.Sprintf("測試員(%d)", i)
-		now := time.Now()
-		customers = append(customers, Customer{i, name, "", now, 0, 0, 0})
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query("SELECT * FROM Customer")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var customer Customer
+		err := rows.Scan(&customer.ID, &customer.Name, &customer.TotalArrears)
+		if err != nil {
+			log.Fatal(err)
+		}
+		customers = append(customers, customer)
 	}
 	c.JSON(http.StatusOK, customers)
 }
@@ -360,12 +397,6 @@ func get_today_customer_name(c *gin.Context) {
 
 	var todayCustomers []Customer
 
-	// 取得今天日期
-	//today := time.Now().Format("2006-01-02")
-
-	// 查詢今天的 today_customer 資料
-
-	//rows, err := db.Query("SELECT * FROM today_customer WHERE date=? AND Setting=0 ORDER BY Sort ASC LIMIT 1", today)
 	rows, err := db.Query("SELECT * FROM today_customer WHERE Setting=0 ORDER BY Sort ASC LIMIT 1")
 	if err != nil {
 		log.Fatal(err)

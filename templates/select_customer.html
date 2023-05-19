@@ -129,6 +129,9 @@
 
       function handleKeyDown(event) {
         switch (event.key) {
+          case "Escape":
+            window.location = "http://127.0.0.1:8080";
+          break
           
           case "ArrowUp":
             if (currentY > 0) {
@@ -172,6 +175,12 @@
 
             table.rows[currentY].cells[currentX].style.backgroundColor = 'white';
             break;
+
+          case " ":
+
+            table.rows[currentY].cells[currentX].style.backgroundColor = 'white';
+            break;
+
           default:
             return;
         }
