@@ -60,7 +60,7 @@
       const table2 = document.getElementById("detailTable");
       detailTable.style.display = "none";
       firstCustomerTotal=0
-      fetch(url)
+      fetch("/get_customer_name")
         .then((response) => response.json())
         .then((data) => {
           let i = 0;

@@ -19,15 +19,15 @@ import (
 )
 
 type Fish struct {
-	ID           int       `json:"id"`
-	Date         time.Time `json:"date"`
-	FishName     string    `json:"fishName"`
-	Weight       float32   `json:"weight"`
-	Price        int       `json:"price"`
-	Fraction     float32   `json:"fraction"`
-	Package      string    `json:"package"`
-	TotalPrice   int       `json:"totalPrice"`
-	CustomerName string    `json:"customerName"`
+	ID           int     `json:"id"`
+	Date         string  `json:"date"`
+	FishName     string  `json:"fishName"`
+	Weight       float32 `json:"weight"`
+	Price        int     `json:"price"`
+	Fraction     float32 `json:"fraction"`
+	Package      string  `json:"package"`
+	TotalPrice   int     `json:"totalPrice"`
+	CustomerName string  `json:"customerName"`
 }
 
 type FishList struct {
@@ -120,10 +120,32 @@ func insertSelectCustomer(name string, id int, date time.Time, sort int, TodayAr
 	}
 	defer db.Close()
 
-	_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears,Sort) VALUES (?, ?, 0,?,?,?,?)`, name, id, date, 0, 0, sort)
+	// 先檢查今天的選擇資料是否存在
+
+	rows, err := db.Query(`select * from  today_customer where name=? and id=? and date=?`, name, id, date)
 	if err != nil {
-		return fmt.Errorf("failed to insert customer: %v", err)
+		log.Fatal(err)
 	}
+	defer rows.Close()
+
+	index := 0
+	// 迭代查詢結果，並將結果加入 slice
+	for rows.Next() {
+		index++
+	}
+
+	if index == 0 {
+		_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears,Sort) VALUES (?, ?, 0,?,?,?,?)`, name, id, date, 0, 0, sort)
+		if err != nil {
+			return fmt.Errorf("failed to insert customer: %v", err)
+		}
+	} else {
+		_, err = db.Exec(`UPDATE today_customer SET Setting = ?, Sort = ? WHERE date = ? AND id = ?;`, 0, sort, date, id)
+		if err != nil {
+			return fmt.Errorf("failed to insert customer: %v", err)
+		}
+	}
+
 	return nil
 }
 
@@ -225,17 +247,36 @@ func handlePostFish(c *gin.Context) {
 		return
 	}
 
+	layout := "2006/1/2"
+	// 解析日期字符串
+	t, err := time.Parse(layout, fishes[0].Date)
+	if err != nil {
+		fmt.Println("解析错误:", err)
+		return
+	} // 解析日期字符串
+
 	userID := 0
 	TodayArrears := 0
+	/*
+		accountDay := time.Date(2023, time.May, 20, 0, 0, 0, 0, time.UTC)
+		for _, detail := range fishes {
+			accountDay = detail.Date.AddDate(0, 0, 1)
+			userID = detail.ID
+		}
+		YYMMDDDate := accountDay.Format("2006-01-02")
+
+		_, err = db.Exec(`DELETE from accountDetail WHERE date(Date) = date(?) AND ID=?`, YYMMDDDate, userID)
+	*/
+
 	for _, detail := range fishes {
 
 		// 讀取 javasccript 時,讀取到的日期一律會少一天,目前尚未找到原因,先使用加一天的方法進行補正
-		fix_day := detail.Date.AddDate(0, 0, 1)
+		//fix_day := detail.Date.AddDate(1, 0, 0)
 
 		TodayArrears += detail.TotalPrice
 
 		// 將詳細帳單輸入到欄位中
-		_, err = db.Exec(`INSERT INTO accountDetail (ID,CustomerName, Date, FishName, Weight,Price,Fraction,Package,TotalPrice,Print) VALUES (?,?, ?, ?,?,?,?,?,?,?)`, detail.ID, detail.CustomerName, fix_day, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false)
+		_, err = db.Exec(`INSERT INTO accountDetail (ID,CustomerName, Date, FishName, Weight,Price,Fraction,Package,TotalPrice,Print) VALUES (?,?, ?, ?,?,?,?,?,?,?)`, detail.ID, detail.CustomerName, t, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false)
 		if err != nil {
 			fmt.Print(err.Error())
 		}
@@ -244,14 +285,12 @@ func handlePostFish(c *gin.Context) {
 
 	// 標記今天的帳目已經完成
 	query := "UPDATE today_customer SET Setting=?,TodayArrears=? WHERE date=? AND Name=?"
-	fmt.Print(fishes[0].Date.UTC().Format("2006-01-02 15:04:05-07:00"))
-
 	// 讀取 javasccript 時,讀取到的日期一律會少一天,目前尚未找到原因,先使用加一天的方法進行補正
-	fix_day := fishes[0].Date.AddDate(0, 0, 1)
-	date := time.Date(fix_day.Local().Year(), fix_day.Local().Month(), fix_day.Local().Day(), 0, 0, 0, 0, time.Local)
-	formattedDate := date.Format("2006-01-02 15:04:05-07:00")
+	//fix_day := fishes[0].Date.AddDate(1, 0, 0)
+	//date := time.Date(fix_day.Local().Year(), fix_day.Local().Month(), fix_day.Local().Day(), 0, 0, 0, 0, time.Local)
+	//formattedDate := date.Format("2006-01-02 15:04:05-07:00")
 
-	result, err := db.Exec(query, 1, TodayArrears, formattedDate, fishes[0].CustomerName)
+	result, err := db.Exec(query, 1, TodayArrears, t, fishes[0].CustomerName)
 
 	fmt.Print(result)
 
@@ -260,7 +299,6 @@ func handlePostFish(c *gin.Context) {
 	}
 
 	// 加總使用者帳款數
-
 	query = "UPDATE Customer SET TotalArrears=TotalArrears+? where id=?"
 	_, err = db.Exec(query, TodayArrears, userID)
 
@@ -336,40 +374,90 @@ func getAllAccountCustomer(c *gin.Context) {
 func getCustomAccount(c *gin.Context) {
 
 	id := c.Query("id")
+	date := c.Query("date")
 
+	fmt.Print(date)
 	// 在这里使用 id 参数进行逻辑处理
 	// ...
-	db, err := sql.Open("sqlite3", DB_Name)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer db.Close()
 
-	var getCustomAccountDetail []Fish
+	if date == "" && id != "" {
 
-	rows, err := db.Query("SELECT * FROM accountDetail where ID =? ORDER BY Date", id)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
+		db, err := sql.Open("sqlite3", DB_Name)
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer db.Close()
 
-	// 迭代查詢結果，並將結果加入 slice
-	for rows.Next() {
-		var fish Fish
-		print := false
-		err := rows.Scan(&fish.ID, &fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &print)
+		var getCustomAccountDetail []Fish
+
+		rows, err := db.Query("SELECT * FROM accountDetail where ID =? ORDER BY Date", id)
 		if err != nil {
 			log.Fatal(err)
 		}
-		getCustomAccountDetail = append(getCustomAccountDetail, fish)
-	}
+		defer rows.Close()
 
-	// 檢查是否有迭代中發生錯誤
-	if err := rows.Err(); err != nil {
-		log.Fatal(err)
-	}
+		// 迭代查詢結果，並將結果加入 slice
+		for rows.Next() {
+			var fish Fish
+			print := false
+			err := rows.Scan(&fish.ID, &fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &print)
+			if err != nil {
+				log.Fatal(err)
+			}
+			getCustomAccountDetail = append(getCustomAccountDetail, fish)
+		}
 
-	c.JSON(http.StatusOK, getCustomAccountDetail)
+		// 檢查是否有迭代中發生錯誤
+		if err := rows.Err(); err != nil {
+			log.Fatal(err)
+		}
+
+		c.JSON(http.StatusOK, getCustomAccountDetail)
+
+	} else {
+		db, err := sql.Open("sqlite3", DB_Name)
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer db.Close()
+
+		var getCustomAccountDetail []Fish
+
+		dateString := date
+		dateLayout := "2006-01-02" // 指定日期字符串的格式
+
+		date, err := time.Parse(dateLayout, dateString)
+		if err != nil {
+			fmt.Println("日期解析错误:", err)
+			return
+		}
+
+		rows, err := db.Query("SELECT * FROM accountDetail WHERE date(Date) = date(?) AND ID=?", date, id)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer rows.Close()
+
+		// 迭代查詢結果，並將結果加入 slice
+		for rows.Next() {
+			var fish Fish
+			print := false
+			err := rows.Scan(&fish.ID, &fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &print)
+			if err != nil {
+				log.Fatal(err)
+			}
+			getCustomAccountDetail = append(getCustomAccountDetail, fish)
+		}
+
+		// 檢查是否有迭代中發生錯誤
+		if err := rows.Err(); err != nil {
+			log.Fatal(err)
+		}
+
+		c.JSON(http.StatusOK, getCustomAccountDetail)
+
+	}
 
 }
 

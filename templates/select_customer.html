@@ -1,220 +1,221 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Table Navigation</title>
-    <style>
-        table, th, td {
-          border: 1px solid black;
-          border-collapse: collapse;
-        }
-        td {
-          width: 100px;
-          height: 50px;
-          text-align: center;
-          vertical-align: middle;
-        }
-        .highlight {
-          background-color: yellow;
-        }
-        .selected {
-          background-color: red;
-        }
 
-        body {
-        background-color: #acacdb;
-        }
-      </style>
-  </head>
-  <body>
-    <div>
-      <h>記帳日期:</h>
-      <h id="currentDate">記帳日期:</h>
-    </div>
-    <table id="myTable"></table>
-    <button id="myButton">傳送表單</button>
-    <script>
+<head>
+  <meta charset="UTF-8" />
+  <title>Table Navigation</title>
+  <style>
+    table,
+    th,
+    td {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
 
-      let custome_index=0;
-      myButton.onclick = function() {
-          const form = document.getElementById('myTable');
-          const rows = form.getElementsByTagName('tr');
-          const data = [];
-          for (let i = 0; i < rows.length; i++) {
-              const row = rows[i];
-              const cells = row.getElementsByTagName('td');
+    td {
+      width: 100px;
+      height: 50px;
+      text-align: center;
+      vertical-align: middle;
+    }
 
-              for (let j = 0; j < cells.length; j++){
+    .highlight {
+      background-color: yellow;
+    }
 
-                if (cells[j].style.backgroundColor == "red"){
+    .selected {
+      background-color: red;
+    }
 
+    body {
+      background-color: #acacdb;
+    }
+  </style>
+</head>
 
-                  var timestamp = Date.parse(currentDate.innerText);
-                  var date = new Date(timestamp);
-
-
-                  currentDate = document.getElementById("currentDate");
-                  const id=cells[j].innerText;
-                  const name=cells[j].innerText;
-
-                  tempSpan0 = cells[j].querySelector('span0');
-                  tempSpan1 = cells[j].querySelector('span1');
-                  tempSpan2 = cells[j].querySelector('span2');
-
-
-
-                  data.push({
-                  id: parseInt(tempSpan0.innerText),
-                  name: tempSpan1.innerText,
-                  date: date,
-                  sort: parseInt(tempSpan2.innerText),
-                  setting: "",
-                  TotalArrears: 0,
-                  TodayArrears: 0,
-                  });
-                }
-              }
+<body>
+  <div>
+    <h>記帳日期:</h>
+    <h id="currentDate">記帳日期:</h>
+  </div>
+  <table id="myTable"></table>
+  <button id="myButton">傳送表單</button>
+  <script>
+    let custome_index = 0;
+    myButton.onclick = function() {
+      const form = document.getElementById('myTable');
+      const rows = form.getElementsByTagName('tr');
+      const data = [];
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const cells = row.getElementsByTagName('td');
+        for (let j = 0; j < cells.length; j++) {
+          if (cells[j].style.backgroundColor == "red") {
+            var timestamp = Date.parse(currentDate.innerText);
+            var date = new Date(timestamp);
+            currentDate = document.getElementById("currentDate");
+            const id = cells[j].innerText;
+            const name = cells[j].innerText;
+            tempSpan0 = cells[j].querySelector('span0');
+            tempSpan1 = cells[j].querySelector('span1');
+            tempSpan2 = cells[j].querySelector('span2');
+            data.push({
+              id: parseInt(tempSpan0.innerText),
+              name: tempSpan1.innerText,
+              date: date,
+              sort: parseInt(tempSpan2.innerText),
+              setting: "",
+              TotalArrears: 0,
+              TodayArrears: 0,
+            });
           }
-          const xhr = new XMLHttpRequest();
-          xhr.open('POST', '/set_today_customer_name');
-          xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-          xhr.send(JSON.stringify(data));
-
-          alert("選取 "+custome_index+"位客戶,轉跳到輸入頁面")
-          window.location= "http://127.0.0.1:8080/input";
-      };
-
-      const url = "/get_customer_name";
-      const table = document.getElementById("myTable");
-      let currentX = 0;
-      let currentY = 0;
-
-      fetch(url)
-        .then((response) => response.json())
-        .then((data) => {
-          let i = 0;
-          while (i < data.length) {
-            const tr = document.createElement("tr");
-            for (let j = 0; j < 10; j++) {
-              if (i >= data.length) {
-                break;
-              }
-              const td = document.createElement("td");
-              //td.innerText = data[i].name;
-              
-              // 暫存 ID
-              const tempSpan0=document.createElement("span0");
-              tempSpan0.innerText=data[i].id;
-              tempSpan0.style.display = "none";
-              td.append(tempSpan0);
-
-              // 暫存名字 ID
-              const tempSpan1=document.createElement("span1");
-              tempSpan1.innerText=data[i].name;
-              td.append(tempSpan1);
-
-              // 暫存排序 Sort
-              const tempSpan2=document.createElement("span2");
-              tempSpan2.innerText="";
-              td.append(tempSpan2);
-
-              tr.appendChild(td);
-              i++;
-            }
-            table.appendChild(tr);
-          }
-          table.rows[currentY].cells[currentX].classList.add("focus");
-          window.addEventListener("keydown", handleKeyDown);
-        });
-
-      function handleKeyDown(event) {
-        switch (event.key) {
-          case "Escape":
-            window.location = "http://127.0.0.1:8080";
-          break
-          
-          case "ArrowUp":
-            if (currentY > 0) {
-              currentY--;
-            }
-            break;
-          case "ArrowDown":
-            if (currentY < table.rows.length - 1) {
-              currentY++;
-            }
-            break;
-          case "ArrowLeft":
-            if (currentX > 0) {
-              currentX--;
-            } else if (currentY > 0) {
-              currentY--;
-              currentX = table.rows[currentY].cells.length - 1;
-            }
-            break;
-          case "ArrowRight":
-            if (currentX < table.rows[currentY].cells.length - 1) {
-              currentX++;
-            } else if (currentY < table.rows.length - 1) {
-              currentY++;
-              currentX = 0;
-            }
-            break;
-          case "Enter":
-            table.rows[currentY].cells[currentX].style.backgroundColor = 'red';
-            //table_position=table.rows[currentY].cells[currentX]
-            ///tempSpan = table_position.querySelector('span');​
-            //tempSpan.innerText=""
-            test=table.rows[currentY].cells[currentX];
-            tempSpan2 = test.querySelector('span2');
-            custome_index+=1;
-            tempSpan2.innerText=custome_index;
-
-
-            break;
-          case " ":
-
-            table.rows[currentY].cells[currentX].style.backgroundColor = 'white';
-            break;
-
-          case " ":
-
-            table.rows[currentY].cells[currentX].style.backgroundColor = 'white';
-            break;
-
-          default:
-            return;
         }
-        for (let i = 0; i < table.rows.length; i++) {
-          for (let j = 0; j < table.rows[i].cells.length; j++) {
-            table.rows[i].cells[j].classList.remove("focus");
+      }
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/set_today_customer_name');
+      xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+      xhr.send(JSON.stringify(data));
+      alert("選取 " + custome_index + "位客戶,轉跳到輸入頁面")
+      window.location = "http://127.0.0.1:8080/input";
+    };
+    const url = "/get_customer_name";
+    const table = document.getElementById("myTable");
+    let currentX = 0;
+    let currentY = 0;
+    fetch(url)
+      .then((response) => response.json())
+      .then((data) => {
+        let i = 0;
+        while (i < data.length) {
+          const tr = document.createElement("tr");
+          for (let j = 0; j < 10; j++) {
+            if (i >= data.length) {
+              break;
+            }
+            const td = document.createElement("td");
+            //td.innerText = data[i].name;
+            // 暫存 ID
+            const tempSpan0 = document.createElement("span0");
+            tempSpan0.innerText = data[i].id;
+            tempSpan0.style.display = "none";
+            td.append(tempSpan0);
+            // 暫存名字 ID
+            const tempSpan1 = document.createElement("span1");
+            tempSpan1.innerText = data[i].name;
+            td.append(tempSpan1);
+            // 暫存排序 Sort
+            const tempSpan2 = document.createElement("span2");
+            tempSpan2.innerText = "";
+            td.append(tempSpan2);
+            tr.appendChild(td);
+            i++;
           }
+          table.appendChild(tr);
         }
         table.rows[currentY].cells[currentX].classList.add("focus");
+        window.addEventListener("keydown", handleKeyDown);
+      });
+
+    function handleKeyDown(event) {
+      switch (event.key) {
+        case "Escape":
+          window.location = "http://127.0.0.1:8080";
+          break
+        case "ArrowUp":
+          if (currentY > 0) {
+            currentY--;
+          }
+          break;
+        case "ArrowDown":
+          if (currentY < table.rows.length - 1) {
+            currentY++;
+          }
+          break;
+        case "ArrowLeft":
+          if (currentX > 0) {
+            currentX--;
+          } else if (currentY > 0) {
+            currentY--;
+            currentX = table.rows[currentY].cells.length - 1;
+          }
+          break;
+        case "ArrowRight":
+          if (currentX < table.rows[currentY].cells.length - 1) {
+            currentX++;
+          } else if (currentY < table.rows.length - 1) {
+            currentY++;
+            currentX = 0;
+          }
+          break;
+        case "Enter":
+          table.rows[currentY].cells[currentX].style.backgroundColor = 'red';
+          //table_position=table.rows[currentY].cells[currentX]
+          ///tempSpan = table_position.querySelector('span');​
+          //tempSpan.innerText=""
+          test = table.rows[currentY].cells[currentX];
+          tempSpan2 = test.querySelector('span2');
+          custome_index += 1;
+          tempSpan2.innerText = custome_index;
+          break;
+        case " ":
+          table.rows[currentY].cells[currentX].style.backgroundColor = 'white';
+          break;
+        case " ":
+          table.rows[currentY].cells[currentX].style.backgroundColor = 'white';
+          break;
+        default:
+          return;
       }
-
-
-      // 設定日期
-      function showPrompt() {
-       
-        if (userInput !== null) {
-          var today = new Date();
-          var yyyymmdd = (today.getFullYear()).toString().padStart(4, '0')+"-"+(today.getMonth() + 1).toString().padStart(2, '0')+"-"+today.getDate().toString().padStart(2, '0')
-          var userInput = prompt("輸入記帳日期", yyyymmdd);
-          const currentDate = document.getElementById("currentDate");
-          alert("記帳日期為：" + userInput);
-          currentDate.innerText = userInput
+      for (let i = 0; i < table.rows.length; i++) {
+        for (let j = 0; j < table.rows[i].cells.length; j++) {
+          table.rows[i].cells[j].classList.remove("focus");
         }
       }
-      window.onload = function() {
-        
+      table.rows[currentY].cells[currentX].classList.add("focus");
+    }
+    // 設定日期
+    function showPrompt() {
+      if (userInput !== null) {
+        var today = new Date();
+        var yyyymmdd = (today.getFullYear()).toString().padStart(4, '0') + "-" + (today.getMonth() + 1).toString()
+          .padStart(2, '0') + "-" + today.getDate().toString().padStart(2, '0')
+        var userInput = prompt("輸入記帳日期", yyyymmdd);
+        const currentDate = document.getElementById("currentDate");
+        alert("記帳日期為：" + userInput);
+        currentDate.innerText = userInput
+      }
+    }
+    window.onload = function() {
+      // 使用 fetch() 方法呼叫 API
+      var index=0
+      fetch('/get_today_customer_name')
+        .then(response => response.json()) // 將回傳的資料轉為 JSON 格式
+        .then(data => {
+          // 將 JSON 格式資料存入 dictionary 變數
+          for (let i = 0; i < data.length; i++) {
+            index++
+          }
+          alert("尚有人員未處理 "+index+"人")
+          window.location = "http://127.0.0.1:8080/input";
+          // 顯示 dictionary 變數內容
+          console.log(dictionary);
+        })
+        .catch(error => {
+          if(index==0){
+            showPrompt()
+          }
+          
+        });
 
-        showPrompt()
-      }
-    </script>
-    <style>
-      .focus {
-        background-color: yellow;
-      }
-    </style>
-  </body>
+
+      
+    }
+  </script>
+  <style>
+    .focus {
+      background-color: yellow;
+    }
+  </style>
+</body>
+
 </html>
