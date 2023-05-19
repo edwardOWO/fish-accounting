@@ -310,7 +310,7 @@ func getCustomAccount(c *gin.Context) {
 
 	var getCustomAccountDetail []Fish
 
-	rows, err := db.Query("SELECT * FROM accountDetail where ID =?", id)
+	rows, err := db.Query("SELECT * FROM accountDetail where ID =? ORDER BY Date", id)
 	if err != nil {
 		log.Fatal(err)
 	}

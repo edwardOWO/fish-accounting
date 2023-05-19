@@ -62,7 +62,7 @@
     }
     let custome_index = 0;
     myButton.onclick = function() {
-      table.style.display = "none";
+      window.location= "http://127.0.0.1:8080/login";
     };
     const url = "/get_customer_name";
     const table = document.getElementById("myTable");
@@ -113,6 +113,8 @@
           for (var i = rowCount - 1; i > 0; i--) {
             detail_table3.deleteRow(i);
           }
+
+          
           break;
         case "ArrowUp":
           if (currentY > 0) {
@@ -160,7 +162,6 @@
               var dateObject = new Date(item.date);
               var datePart = dateObject.toISOString().split('T')[0];
               cell.innerText = datePart 
-
               var cell = newRow.insertCell();
               cell.contentEditable = false;
               cell.innerText = item.fishName
