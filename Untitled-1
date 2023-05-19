@@ -1,0 +1,5 @@
+-- database: /workspaces/fish-accounting/test.sqlite
+
+-- 要運行整個文件，請按窗口右上角的▷按鈕。
+
+SELECT * FROM "accountDetail" where id = 1;

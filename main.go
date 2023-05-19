@@ -171,6 +171,9 @@ func main() {
 	// 輸入帳目資料
 	router.POST("/accountDetail", handlePostFish)
 
+	// 取得個人帳目資料
+	router.GET("/accountDetail", getCustomAccount)
+
 	// 取得客戶資訊
 	router.GET("/get_customer_name", handleCustome)
 
@@ -290,6 +293,46 @@ func getAllAccountCustomer(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, getAllAccountCustomer)
+
+}
+
+func getCustomAccount(c *gin.Context) {
+
+	id := c.Query("id")
+
+	// 在这里使用 id 参数进行逻辑处理
+	// ...
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	var getCustomAccountDetail []Fish
+
+	rows, err := db.Query("SELECT * FROM accountDetail where ID =?", id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	// 迭代查詢結果，並將結果加入 slice
+	for rows.Next() {
+		var fish Fish
+		print := false
+		err := rows.Scan(&fish.ID, &fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &print)
+		if err != nil {
+			log.Fatal(err)
+		}
+		getCustomAccountDetail = append(getCustomAccountDetail, fish)
+	}
+
+	// 檢查是否有迭代中發生錯誤
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	c.JSON(http.StatusOK, getCustomAccountDetail)
 
 }
 
