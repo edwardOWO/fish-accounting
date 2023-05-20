@@ -40,9 +40,9 @@ window.onload = function() {
         for (let i = 0; i < data.length; i++) {
             customer.innerHTML=data[i].name
             pre_count.innerHTML=parseFloat(data[i].totalArrears)
+            let date = new Date(data[i].date);
+            let formattedDate = date.toISOString().split('T')[0];
             var currentDate = document.getElementById("currentDate");
-            var date = new Date(data[i].date);
-            var formattedDate = date.toLocaleDateString();
             currentDate.innerText=formattedDate;
             var customerID = document.getElementById("customerID");
             customerID.innerText=data[i].id
@@ -94,7 +94,7 @@ window.onload = function() {
         })
         .catch(error => {
           // 处理请求错误
-          alert(error)
+          // alert(error)
         });
     }
         
@@ -149,9 +149,14 @@ window.onload = function() {
       });
 
 
+      table.rows[currentY].cells[currentX].classList.add("focus");
+
+
 };
 
 myButton.onclick = function() {
+
+    checkDate=false
     const form = document.getElementById('myTable');
     const tbody = table.getElementsByTagName('tbody')[0];
     const rows = tbody.getElementsByTagName('tr');
@@ -180,6 +185,10 @@ myButton.onclick = function() {
         var customerID = document.getElementById("customerID");
         id = customerID.innerText;
 
+        if (cells[0].innerText !=""){
+            checkDate=true;
+        }
+        
 
         data.push({
         id: parseInt(id),
@@ -193,6 +202,28 @@ myButton.onclick = function() {
         customerName: customerName,
         });
     }
+
+    if (checkDate==false){
+        var currentDate = document.getElementById("currentDate");
+        var customerID = document.getElementById("customerID");
+        id = customerID.innerText;
+        data.push({
+            id: parseInt(id),
+            date: currentDate.innerText,
+            fishName: "",
+            weight: 0,
+            price: 0,
+            fraction: 0,
+            package: "",
+            totalPrice: 0,
+            customerName: "DELETE",
+        });
+    }
+
+
+
+
+
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/accountDetail');
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');

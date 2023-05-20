@@ -247,60 +247,79 @@ func handlePostFish(c *gin.Context) {
 		return
 	}
 
-	layout := "2006/1/2"
+	layout := "2006-01-02"
 	// 解析日期字符串
-	t, err := time.Parse(layout, fishes[0].Date)
+	userID := 0
+	day := ""
+	if fishes[0].Date != "" {
+
+		day = fishes[0].Date
+		userID = fishes[0].ID
+	} else if fishes[1].Date != "" {
+		day = fishes[1].Date
+	}
+
+	t, err := time.Parse(layout, day)
 	if err != nil {
 		fmt.Println("解析错误:", err)
 		return
 	} // 解析日期字符串
 
-	userID := 0
 	TodayArrears := 0
-	/*
-		accountDay := time.Date(2023, time.May, 20, 0, 0, 0, 0, time.UTC)
-		for _, detail := range fishes {
-			accountDay = detail.Date.AddDate(0, 0, 1)
-			userID = detail.ID
-		}
-		YYMMDDDate := accountDay.Format("2006-01-02")
 
-		_, err = db.Exec(`DELETE from accountDetail WHERE date(Date) = date(?) AND ID=?`, YYMMDDDate, userID)
-	*/
+	//  先刪除當天的所有數據,待後續寫入數據
+	_, err = db.Exec(`DELETE from accountDetail WHERE date(Date) = date(?) AND ID=?`, t, fishes[0].ID)
 
-	for _, detail := range fishes {
-
-		// 讀取 javasccript 時,讀取到的日期一律會少一天,目前尚未找到原因,先使用加一天的方法進行補正
-		//fix_day := detail.Date.AddDate(1, 0, 0)
-
-		TodayArrears += detail.TotalPrice
-
-		// 將詳細帳單輸入到欄位中
-		_, err = db.Exec(`INSERT INTO accountDetail (ID,CustomerName, Date, FishName, Weight,Price,Fraction,Package,TotalPrice,Print) VALUES (?,?, ?, ?,?,?,?,?,?,?)`, detail.ID, detail.CustomerName, t, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false)
-		if err != nil {
-			fmt.Print(err.Error())
-		}
-		userID = detail.ID
+	if err != nil {
+		fmt.Print(err.Error())
 	}
 
-	// 標記今天的帳目已經完成
-	query := "UPDATE today_customer SET Setting=?,TodayArrears=? WHERE date=? AND Name=?"
-	// 讀取 javasccript 時,讀取到的日期一律會少一天,目前尚未找到原因,先使用加一天的方法進行補正
-	//fix_day := fishes[0].Date.AddDate(1, 0, 0)
-	//date := time.Date(fix_day.Local().Year(), fix_day.Local().Month(), fix_day.Local().Day(), 0, 0, 0, 0, time.Local)
-	//formattedDate := date.Format("2006-01-02 15:04:05-07:00")
+	// 寫入當天的所有數據
+	for _, detail := range fishes {
 
-	result, err := db.Exec(query, 1, TodayArrears, t, fishes[0].CustomerName)
+		// 如果數據都刪除了,僅有一筆為 DELETE參數時,表示所有資料都刪除,故不再寫入到系統
+		if detail.CustomerName != "DELETE" {
+			TodayArrears += detail.TotalPrice
 
+			// 將詳細帳單輸入到欄位中
+			_, err = db.Exec(`INSERT INTO accountDetail (ID,CustomerName, Date, FishName, Weight,Price,Fraction,Package,TotalPrice,Print) VALUES (?,?, ?, ?,?,?,?,?,?,?)`, detail.ID, detail.CustomerName, t, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false)
+			if err != nil {
+				fmt.Print(err.Error())
+			}
+			userID = detail.ID
+		}
+	}
+
+	// 更新今天的帳目,並且標記已經處理
+	query := "UPDATE today_customer SET Setting=?,TodayArrears=? WHERE date=? AND ID=?"
+	result, err := db.Exec(query, 1, TodayArrears, t, fishes[0].ID)
 	fmt.Print(result)
-
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// 加總使用者帳款數
-	query = "UPDATE Customer SET TotalArrears=TotalArrears+? where id=?"
-	_, err = db.Exec(query, TodayArrears, userID)
+	// 加總使用者帳款 需加總每天的欠款數並重新計算
+	rows, err := db.Query(`select TodayArrears from  today_customer WHERE  ID=?`, fishes[0].ID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	TotalArrears := 0
+	for rows.Next() {
+		data := 0
+		err := rows.Scan(&data)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		TotalArrears += data
+	}
+
+	// 更新當前所有的欠款數到 Customer
+	query = "UPDATE Customer SET TotalArrears=? where id=?"
+	_, err = db.Exec(query, TotalArrears, userID)
 
 	if err != nil {
 		log.Fatal(err)
