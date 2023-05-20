@@ -251,13 +251,7 @@ func handlePostFish(c *gin.Context) {
 	// 解析日期字符串
 	userID := 0
 	day := ""
-	if fishes[0].Date != "" {
-
-		day = fishes[0].Date
-		userID = fishes[0].ID
-	} else if fishes[1].Date != "" {
-		day = fishes[1].Date
-	}
+	day = fishes[0].Date
 
 	t, err := time.Parse(layout, day)
 	if err != nil {

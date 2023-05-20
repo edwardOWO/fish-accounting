@@ -157,6 +157,11 @@
           custome_index += 1;
           tempSpan2.innerText = custome_index;
           break;
+
+        case "s": // clear col
+          event.preventDefault();
+          button=document.getElementById('myButton');
+          button.click()
         case " ":
           table.rows[currentY].cells[currentX].style.backgroundColor = "";
           break;

@@ -1,6 +1,9 @@
 let dictionary = {};
 
-window.onload = function() {
+
+
+function loadPage(){
+
     var table = document.getElementById("myTable");
     table.rows[1].cells[0].focus();
 
@@ -13,22 +16,6 @@ window.onload = function() {
 
     var pre_count = document.getElementById("pre_count");
     pre_count.innerHTML=0;
-
-    // 使用 fetch() 方法呼叫 API
-    fetch('/get_product_name')
-    .then(response => response.json()) // 將回傳的資料轉為 JSON 格式
-    .then(data => {
-        // 將 JSON 格式資料存入 dictionary 變數
-        for (let i = 0; i < data.length; i++) {
-        let customer = data[i];
-        dictionary[customer.key] = customer.name;
-        }
-
-        // 顯示 dictionary 變數內容
-        console.log(dictionary);
-    })
-    .catch(error => console.error()); // 若發生錯誤則顯示錯誤訊息
-
 
     var userid=""
     var userDate=""
@@ -49,57 +36,21 @@ window.onload = function() {
             
             userid=data[i].id
             userDate=new Date(data[i].date)
+
+            //
         }
             //var url = "/accountDetail?id=" + table_select_id.innerText
-    // 新增下一列,繼續進行運作
-    var detail_table3 = document.getElementById("myTable");
-    rowCount = detail_table3.rows.length;
+        // 新增下一列,繼續進行運作
+        var detail_table3 = document.getElementById("myTable");
+        rowCount = detail_table3.rows.length;
 
-    var dateObject = new Date(userDate);
-    var datePart = dateObject.toISOString().split('T')[0];
-    // 檢查資料如果已經讀取不重複讀取
-    if (rowCount == 2) {
-      fetch("/accountDetail?id="+userid+"&date="+datePart)
-        .then(response => response.json())
-        .then(data => {
-          data.forEach(item => {
-            var newRow = detail_table3.insertRow(-1);
-            var cell = newRow.insertCell();
-            cell.contentEditable = true;
-            var dateObject = new Date(item.date);
-            var datePart = dateObject.toISOString().split('T')[0];
-            cell.innerText = datePart
-            var cell = newRow.insertCell();
-            cell.contentEditable = true;
-            cell.innerText = item.fishName
-            var cell = newRow.insertCell();
-            cell.contentEditable = true;
-            cell.innerText = item.weight
-            var cell = newRow.insertCell();
-            cell.contentEditable = true;
-            cell.innerText = item.price
-            var cell = newRow.insertCell();
-            cell.contentEditable = true;
-            cell.innerText = item.fraction
-            var cell = newRow.insertCell();
-            cell.contentEditable = true;
-            cell.innerText = item.package
-            var cell = newRow.insertCell();
-            cell.contentEditable = true;
-            cell.innerText = item.totalPrice
-          });
-
-          table = detail_table3.querySelector("tbody"); 
-          firstRow = table.querySelector("tr").style.display="none";
-        })
-        .catch(error => {
-          // 处理请求错误
-          // alert(error)
-        });
-    }
+        var dateObject = new Date(userDate);
+        var datePart = dateObject.toISOString().split('T')[0];
+        // 檢查資料如果已經讀取不重複讀取
         
-
-        // 顯示 dictionary 變數內容
+        //LoadDetail(rowCount,datePart,userid)        
+        LoadDetail(rowCount,datePart,userid)
+            // 顯示 dictionary 變數內容
         console.log(dictionary);
     })
     .catch(error => {
@@ -110,14 +61,65 @@ window.onload = function() {
     });
 
 
+};
+
+// 讀取詳細資料
+function LoadDetail(rowCount,datePart,userid){
+
+    var detail_table3 = document.getElementById("myTable");
+    if (rowCount == 2) {
+        fetch("/accountDetail?id="+userid+"&date="+datePart)
+          .then(response => response.json())
+          .then(data => {
+            data.forEach(item => {
+              var newRow = detail_table3.insertRow(-1);
+              var cell = newRow.insertCell();
+              cell.contentEditable = true;
+              var dateObject = new Date(item.date);
+              var datePart = dateObject.toISOString().split('T')[0];
+              cell.innerText = datePart
+              var cell = newRow.insertCell();
+              cell.contentEditable = true;
+              cell.innerText = item.fishName
+              var cell = newRow.insertCell();
+              cell.contentEditable = true;
+              cell.innerText = item.weight
+              var cell = newRow.insertCell();
+              cell.contentEditable = true;
+              cell.innerText = item.price
+              var cell = newRow.insertCell();
+              cell.contentEditable = true;
+              cell.innerText = item.fraction
+              var cell = newRow.insertCell();
+              cell.contentEditable = true;
+              cell.innerText = item.package
+              var cell = newRow.insertCell();
+              cell.contentEditable = true;
+              cell.innerText = item.totalPrice
+            });
+  
+
+            table = detail_table3.querySelector("tbody"); 
+            firstRow = table.querySelector("tr").style.display="none";
+            document.getElementById('myTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr')[1].getElementsByTagName('td')[0].focus()
+
+            
+          })
+          .catch(error => {
+            // 处理请求错误
+            //alert(error)
+          });
+          
+      }
+    
+}
 
 
+function PrintFish(){
     const url = "/get_product_name";
     const table2 = document.getElementById("fish_table");
     let currentX = 0;
     let currentY = 0;
-
-
     // 打印魚表
     fetch(url)
       .then((response) => response.json())
@@ -148,16 +150,61 @@ window.onload = function() {
         table2.rows[currentY].cells[currentX].classList.add("focus");
       });
 
-
       table.rows[currentY].cells[currentX].classList.add("focus");
 
 
+    // 將魚種名稱存入 dictionary
+    var customer = document.getElementById("customer");
+    customer.innerHTML="NULL";
+    // 使用 fetch() 方法呼叫 API
+    fetch('/get_product_name')
+    .then(response => response.json()) // 將回傳的資料轉為 JSON 格式
+    .then(data => {
+        // 將 JSON 格式資料存入 dictionary 變數
+        for (let i = 0; i < data.length; i++) {
+        let customer = data[i];
+        dictionary[customer.key] = customer.name;
+        }
+
+        // 顯示 dictionary 變數內容
+        console.log(dictionary);
+    })
+    .catch(error => console.error()); // 若發生錯誤則顯示錯誤訊息
+}
+
+
+window.onload = function() {
+    
+    
+    loadPage()
+
+    PrintFish()
+
 };
+
+testButton.onclick = function(){
+    
+
+    var detail_table3 = document.getElementById("myTable");
+    var rowCount = detail_table3.rows.length;
+    
+    
+    for (var i = rowCount - 1; i > 1; i--) {
+        detail_table3.deleteRow(i);
+    }
+    
+
+    var currentDate = document.getElementById("currentDate");
+    currentDate.innerText="2023-05-18"
+
+    LoadDetail("2","2023-05-18",1)
+}
 
 myButton.onclick = function() {
 
     checkDate=false
-    const form = document.getElementById('myTable');
+    //const form = document.getElementById('myTable');
+    table = document.getElementById('myTable');
     const tbody = table.getElementsByTagName('tbody')[0];
     const rows = tbody.getElementsByTagName('tr');
     const data = [];
@@ -287,7 +334,6 @@ table.addEventListener("keydown", function(event) {
         break;
         case 13: // enter
         event.preventDefault();
-
 
         // 第一格 (產生日期)
         if (currentCol == 0){
@@ -469,7 +515,6 @@ table.addEventListener("keydown", function(event) {
         event.preventDefault();
         button=document.getElementById('myButton');
         button.click()
-        alert(83)
         break;
 
 
