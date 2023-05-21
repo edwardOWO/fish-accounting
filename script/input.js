@@ -1,5 +1,7 @@
 let dictionary = {};
+let accountDate = {};
 
+let index=0
 
 
 function loadPage(){
@@ -52,6 +54,24 @@ function loadPage(){
         LoadDetail(rowCount,datePart,userid)
             // 顯示 dictionary 變數內容
         console.log(dictionary);
+
+
+        fetch("/get_customer_account_date?id="+userid)
+        .then(response => response.json()) // 將回傳的資料轉為 JSON 格式
+        .then(data => {
+        // 將 JSON 格式資料存入 dictionary 變數
+        for (let i = 0; i < data.length; i++) {
+            accountDate[i] = data[i];
+        }
+
+        // 顯示 dictionary 變數內容
+        console.log(dictionary);
+    })
+    .catch(error => console.error()); // 若發生錯誤則顯示錯誤訊息
+
+
+
+
     })
     .catch(error => {
         console.error(error);
@@ -61,11 +81,18 @@ function loadPage(){
     });
 
 
+    
+
+
 };
 
 // 讀取詳細資料
 function LoadDetail(rowCount,datePart,userid){
 
+    var current_count = document.getElementById("current_count");
+    
+    var sum=0
+    var index=0
     var detail_table3 = document.getElementById("myTable");
     if (rowCount == 2) {
         fetch("/accountDetail?id="+userid+"&date="+datePart)
@@ -96,17 +123,28 @@ function LoadDetail(rowCount,datePart,userid){
               var cell = newRow.insertCell();
               cell.contentEditable = true;
               cell.innerText = item.totalPrice
+              sum+= parseInt(item.totalPrice)
             });
   
-
-            table = detail_table3.querySelector("tbody"); 
-            firstRow = table.querySelector("tr").style.display="none";
+            current_count.innerHTML=sum
             document.getElementById('myTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr')[1].getElementsByTagName('td')[0].focus()
-
+            table = detail_table3.querySelector("tbody"); 
             
+            
+            firstRow = table.querySelector("tr")
+            cells = firstRow.querySelectorAll("td");
+            cells.forEach(cell => {
+                cell.textContent = "";
+            });
+            firstRow.style.display="none";
+            currentRow = 1;
+
           })
           .catch(error => {
-            // 处理请求错误
+            firstRow = table.querySelector("tr").style.display="";
+            currentRow = 1;
+            //document.getElementById('myTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0].getElementsByTagName('td')[0].focus()
+            //document.getElementById('myTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0].getElementsByTagName('td')[0].focus()
             //alert(error)
           });
           
@@ -184,20 +222,61 @@ window.onload = function() {
 
 testButton.onclick = function(){
     
+    showPrompt() 
+}
+function showPrompt() {
+ 
+      test = prompt("還款/輸入-1為全部還款", 0);
+      
 
-    var detail_table3 = document.getElementById("myTable");
-    var rowCount = detail_table3.rows.length;
-    
-    
-    for (var i = rowCount - 1; i > 1; i--) {
-        detail_table3.deleteRow(i);
+      customerID = document.getElementById("customerID");
+      currentDate = document.getElementById("currentDate");
+
+
+      if (test==-1){
+        alert("全部還款")
+      }else{
+        alert("還款: "+test+"元")
+      }
+
+
+
+    if (test!=-1){
+
+        fetch("http://127.0.0.1:8080/clear?id="+customerID.innerText+"&payment="+test+"&date="+currentDate.innerText)
+        .then(response => {
+            // Handle the response
+            if (response.ok) {
+            console.log('Request successful');
+            // Process the response data if needed
+            } else {
+            console.log('Request failed');
+            // Handle the error
+            }
+        })
+        .catch(error => {
+            console.log('An error occurred:', error);
+        });
+    }else{
+        fetch("http://127.0.0.1:8080/clear?id="+customerID.innerText+"&date="+currentDate.innerText+"&clear=true")
+        .then(response => {
+            // Handle the response
+            if (response.ok) {
+            console.log('Request successful');
+            // Process the response data if needed
+            } else {
+            console.log('Request failed');
+            // Handle the error
+            }
+        })
+        .catch(error => {
+            console.log('An error occurred:', error);
+        });
+
     }
     
 
-    var currentDate = document.getElementById("currentDate");
-    currentDate.innerText="2023-05-18"
-
-    LoadDetail("2","2023-05-18",1)
+    
 }
 
 myButton.onclick = function() {
@@ -293,15 +372,59 @@ function checkFishColor(number) {
 }
 
 var table = document.getElementById("myTable");
+
+
 var currentRow = 1;
 var currentCol = 0;
-
 table.rows[currentRow].cells[currentCol].focus();
-
 table.addEventListener("keydown", function(event) {
 
     var key = event.which || event.keyCode;
     switch (key) {
+        case 33: // left arrow
+            var detail_table3 = document.getElementById("myTable");
+            var rowCount = detail_table3.rows.length;
+            
+            
+            for (var i = rowCount - 1; i > 1; i--) {
+                detail_table3.deleteRow(i);
+            }
+            
+            var currentDate = document.getElementById("currentDate");
+
+            length = Object.keys(accountDate).length;
+            if(index <length-1){
+                index+=1
+            }
+            currentDate.innerText=accountDate[index]
+            LoadDetail("2",accountDate[index],1)
+        break
+
+            case 34: // left arrow
+            var detail_table3 = document.getElementById("myTable");
+            var rowCount = detail_table3.rows.length;
+            
+            
+            for (var i = rowCount - 1; i > 1; i--) {
+                detail_table3.deleteRow(i);
+            }
+            
+            var currentDate = document.getElementById("currentDate");
+            
+            if(index >0){
+                index-=1
+            }
+            
+            currentDate.innerText=accountDate[index]
+            LoadDetail("2",accountDate[index],1)
+
+            if (index==0){
+                location.reload();
+            }
+
+
+        break
+
         case 37: // left arrow
         if (currentCol > 0) {
             currentCol--;
@@ -425,9 +548,6 @@ table.addEventListener("keydown", function(event) {
         }
         // 第七格 (總價)
         if (currentCol == 6){
-
-           
-
             // 檢查欄位是否都有數值
             check_empty=1
             for (var i = 0; i < 6;i++){
@@ -484,8 +604,13 @@ table.addEventListener("keydown", function(event) {
 
                 // 每次進行計算後累積當前結果
                 sum=0
-                for (i=1 ;i<table.rows.length;i++){
-                    sum+=Math.round(table.rows[i].cells[6].innerText)
+                for (i=0 ;i<table.rows.length;i++){
+                    
+                    var isNumeric = !isNaN(table.rows[i].cells[6].innerText);
+                    if (isNumeric){
+                        sum+=Math.round(table.rows[i].cells[6].innerText)
+                    }
+                    
                 }
                 current_count.innerHTML=sum
 

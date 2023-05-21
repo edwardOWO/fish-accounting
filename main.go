@@ -40,6 +40,8 @@ type Customer struct {
 	Date         time.Time `json:"date"`
 	TotalArrears int       `json:"totalArrears"`
 	TodayArrears int       `json:"todayArrears"`
+	Payments     int       `json:"Payments"`
+	Clear        bool      `json:"Clear"`
 	Sort         int       `json:"sort"`
 }
 type CustomerList struct {
@@ -81,6 +83,8 @@ func init_db() {
 		Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		TotalArrears Float,
 		TodayArrears Int,
+		Payments Int,
+		Clear Bool,
 		Sort INTEGER
 	)`)
 	if err != nil {
@@ -135,7 +139,7 @@ func insertSelectCustomer(name string, id int, date time.Time, sort int, TodayAr
 	}
 
 	if index == 0 {
-		_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears,Sort) VALUES (?, ?, 0,?,?,?,?)`, name, id, date, 0, 0, sort)
+		_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears,Sort,Payments,Clear) VALUES (?, ?, 0,?,?,?,?,0,false)`, name, id, date, 0, 0, sort)
 		if err != nil {
 			return fmt.Errorf("failed to insert customer: %v", err)
 		}
@@ -215,11 +219,17 @@ func main() {
 	// 取得帳目資訊
 	router.GET("/get_all_account_customer", getAllAccountCustomer)
 
+	// 還帳目
+	router.GET("/clear", clear)
+
 	// 選擇今天客戶
 	router.POST("/set_today_customer_name", set_today_customer_name)
 
 	// 讀取今天客戶
 	router.GET("/get_today_customer_name", get_today_customer_name)
+
+	// 讀取今天客戶
+	router.GET("/get_customer_account_date", get_customer_account_date)
 
 	// 取得魚種資訊
 	router.GET("/get_product_name", handleProduct)
@@ -230,6 +240,44 @@ func main() {
 	})
 
 	router.Run(":8080")
+}
+
+func clear(c *gin.Context) {
+
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	id := c.Query("id")
+	date := c.Query("date")
+	payment := c.Query("payment")
+	clear := c.Query("clear")
+
+	layout := "2006-01-02"
+
+	t, err := time.Parse(layout, date)
+	if err != nil {
+		fmt.Println("解析错误:", err)
+		return
+	}
+
+	if clear == "" {
+		_, err = db.Exec(`UPDATE today_customer SET Payments=? WHERE ID=? AND Date=?`, payment, id, t)
+
+		if err != nil {
+			fmt.Print(err.Error())
+		}
+	} else {
+		_, err = db.Exec(`UPDATE today_customer SET Clear=? WHERE ID=? AND Date=?`, true, id, t)
+
+		if err != nil {
+			fmt.Print(err.Error())
+		}
+
+	}
+
 }
 
 func handlePostFish(c *gin.Context) {
@@ -488,6 +536,55 @@ func set_today_customer_name(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Success"})
 }
 
+func get_customer_account_date(c *gin.Context) {
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	id := c.Query("id")
+
+	rows, err := db.Query("SELECT DATE FROM today_customer where ID =? ORDER BY Date DESC", id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	// 迭代查詢結果，並將結果加入 slice
+	var get_customer_account_date []string
+	for rows.Next() {
+
+		//t := time.Date(2023, time.May, 20, 0, 0, 0, 0, time.UTC)
+
+		//str := t.Format("2006-01-02")
+
+		str := ""
+		err := rows.Scan(&str)
+		// 解析时间字符串为 time.Time 类型
+		t, err := time.Parse(time.RFC3339, str)
+		if err != nil {
+			fmt.Println("时间解析错误:", err)
+			return
+		}
+
+		// 将 time.Time 格式化为 "YYYYMMDD" 格式的字符串
+		formattedStr := t.Format("2006-01-02")
+		if err != nil {
+			log.Fatal(err)
+		}
+		get_customer_account_date = append(get_customer_account_date, formattedStr)
+	}
+
+	// 檢查是否有迭代中發生錯誤
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	c.JSON(http.StatusOK, get_customer_account_date)
+
+}
+
 func get_today_customer_name(c *gin.Context) {
 
 	db, err := sql.Open("sqlite3", DB_Name)
@@ -507,7 +604,7 @@ func get_today_customer_name(c *gin.Context) {
 	// 迭代查詢結果，並將結果加入 slice
 	for rows.Next() {
 		var customer Customer
-		err := rows.Scan(&customer.ID, &customer.Name, &customer.Setting, &customer.Date, &customer.TodayArrears, &customer.TotalArrears, &customer.Sort)
+		err := rows.Scan(&customer.ID, &customer.Name, &customer.Setting, &customer.Date, &customer.TotalArrears, &customer.TodayArrears, &customer.Payments, &customer.Clear, &customer.Sort)
 		if err != nil {
 			log.Fatal(err)
 		}
