@@ -228,7 +228,7 @@ func main() {
 	// 讀取今天客戶
 	router.GET("/get_today_customer_name", get_today_customer_name)
 
-	// 讀取今天客戶
+	// 讀取今天的帳款
 	router.GET("/get_customer_account_date", get_customer_account_date)
 
 	// 取得魚種資訊
@@ -264,13 +264,15 @@ func clear(c *gin.Context) {
 	}
 
 	if clear == "" {
+		// 部分還賬
 		_, err = db.Exec(`UPDATE today_customer SET Payments=? WHERE ID=? AND Date=?`, payment, id, t)
 
 		if err != nil {
 			fmt.Print(err.Error())
 		}
 	} else {
-		_, err = db.Exec(`UPDATE today_customer SET Clear=? WHERE ID=? AND Date=?`, true, id, t)
+		// 完整還賬
+		_, err = db.Exec(`UPDATE today_customer SET Clear=? WHERE ID=?`, true, id)
 
 		if err != nil {
 			fmt.Print(err.Error())
@@ -340,8 +342,8 @@ func handlePostFish(c *gin.Context) {
 		log.Fatal(err)
 	}
 
-	// 加總使用者帳款 需加總每天的欠款數並重新計算
-	rows, err := db.Query(`select TodayArrears from  today_customer WHERE  ID=?`, fishes[0].ID)
+	// 加總使用者帳款,如果 Clear 欄位為1(true),表示已經還款故不再加總計算
+	rows, err := db.Query(`select TodayArrears from  today_customer WHERE  ID=1 and Clear=0`, fishes[0].ID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -545,7 +547,7 @@ func get_customer_account_date(c *gin.Context) {
 
 	id := c.Query("id")
 
-	rows, err := db.Query("SELECT DATE FROM today_customer where ID =? ORDER BY Date DESC", id)
+	rows, err := db.Query("SELECT Date,Clear FROM today_customer where ID =? ORDER BY Date DESC", id)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -560,7 +562,10 @@ func get_customer_account_date(c *gin.Context) {
 		//str := t.Format("2006-01-02")
 
 		str := ""
-		err := rows.Scan(&str)
+
+		// 檢查還款狀態
+		clear_status := false
+		err := rows.Scan(&str, &clear_status)
 		// 解析时间字符串为 time.Time 类型
 		t, err := time.Parse(time.RFC3339, str)
 		if err != nil {
@@ -573,6 +578,9 @@ func get_customer_account_date(c *gin.Context) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		formattedStr += ","
+		clear_status_ := strconv.FormatBool(clear_status)
+		formattedStr += clear_status_
 		get_customer_account_date = append(get_customer_account_date, formattedStr)
 	}
 

@@ -19,6 +19,11 @@ function loadPage(){
     var pre_count = document.getElementById("pre_count");
     pre_count.innerHTML=0;
 
+
+    var repayment_status = document.getElementById("repayment_status");
+    repayment_status.innerText=""
+
+
     var userid=""
     var userDate=""
     // 取得今天的使用者
@@ -64,8 +69,20 @@ function loadPage(){
             accountDate[i] = data[i];
         }
 
-        // 顯示 dictionary 變數內容
-        console.log(dictionary);
+
+        str =accountDate[0]
+        parts = str.split(",");
+        if (parts[1]=="true"){
+            var repayment_status = document.getElementById("repayment_status");
+            repayment_status.innerText="已還款";
+            repayment_status.style.color="blue"
+        }else{
+            var repayment_status = document.getElementById("repayment_status");
+            repayment_status.innerText="未還款";
+            repayment_status.style.color="red"
+        }
+
+
     })
     .catch(error => console.error()); // 若發生錯誤則顯示錯誤訊息
 
@@ -149,6 +166,16 @@ function LoadDetail(rowCount,datePart,userid){
           });
           
       }
+
+      /*
+      fetch("/get_customer_account_date?id="+userid)
+        .then(response => response.json()) // 將回傳的資料轉為 JSON 格式
+        .then(data => {
+        // 將 JSON 格式資料存入 dictionary 變數
+        for (let i = 0; i < data.length; i++) {
+            accountDate[i] = data[i];
+        }
+      */
     
 }
 
@@ -222,7 +249,8 @@ window.onload = function() {
 
 testButton.onclick = function(){
     
-    showPrompt() 
+    showPrompt()
+    document.getElementById('myButton').click()
 }
 function showPrompt() {
  
@@ -396,8 +424,21 @@ table.addEventListener("keydown", function(event) {
             if(index <length-1){
                 index+=1
             }
-            currentDate.innerText=accountDate[index]
-            LoadDetail("2",accountDate[index],1)
+
+            str =accountDate[index]
+            parts = str.split(",");
+            currentDate.innerText=parts[0]
+
+            if (parts[1]=="true"){
+                repayment_status.innerHTML="已還款"
+                repayment_status.style.color="blue"
+            }else{
+                repayment_status.innerText="未還款";
+                repayment_status.style.color="red"
+            }
+
+
+            LoadDetail("2",currentDate.innerText,1)
         break
 
             case 34: // left arrow
@@ -415,8 +456,16 @@ table.addEventListener("keydown", function(event) {
                 index-=1
             }
             
-            currentDate.innerText=accountDate[index]
-            LoadDetail("2",accountDate[index],1)
+            str =accountDate[index]
+            parts = str.split(",");
+            currentDate.innerText=parts[0]
+            LoadDetail("2",currentDate.innerText,1)
+
+            if (parts[1]=="true"){
+                repayment_status.innerHTML="已還款"
+            }else{
+                repayment_status.innerHTML="未還款"
+            }
 
             if (index==0){
                 location.reload();
