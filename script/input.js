@@ -247,6 +247,26 @@ window.onload = function() {
 
 };
 
+testButton3.onclick = function(){
+    // 新增下一列,繼續進行運作
+    var newRow = table.insertRow(-1);
+    for (var i = 0; i < table.rows[0].cells.length; i++) {
+        var cell = newRow.insertCell(i);
+        cell.contentEditable = true;
+    }
+}
+
+testButton2.onclick = function(){
+    var newRow = table.insertRow(-1);
+    var totalColumns = table.rows[0].cells.length;
+    var cell = newRow.insertCell(0);
+    cell.colSpan = 6;
+    cell.contentEditable = true;
+    var cell = newRow.insertCell(0);
+    cell.colSpan = 1;
+    cell.contentEditable = true;
+}
+
 testButton.onclick = function(){
     
     showPrompt()
@@ -409,6 +429,7 @@ table.addEventListener("keydown", function(event) {
 
     var key = event.which || event.keyCode;
     switch (key) {
+            
         case 33: // left arrow
             var detail_table3 = document.getElementById("myTable");
             var rowCount = detail_table3.rows.length;
@@ -481,21 +502,35 @@ table.addEventListener("keydown", function(event) {
         }
         break;
         case 38: // up arrow
-        if (currentRow > 0) {
+        if (currentRow > 1) {
             currentRow--;
-            table.rows[currentRow].cells[currentCol].focus();
+            cellCount = table.rows[currentRow];
+            if (cellCount.querySelectorAll('td').length==2){
+                table.rows[currentRow].cells[1].focus();
+            }else{
+                table.rows[currentRow].cells[currentCol].focus();
+            }
         }
         break;
         case 39: // right arrow
-        if (currentCol < table.rows[currentRow].cells.length - 1) {
+        if (currentCol < table.rows[currentRow].cells.length - 2) {
             currentCol++;
             table.rows[currentRow].cells[currentCol].focus();
         }
         break;
         case 40: // down arrow
         if (currentRow < table.rows.length - 1) {
+
             currentRow++;
-            table.rows[currentRow].cells[currentCol].focus();
+            cellCount = table.rows[currentRow];
+            if (cellCount.querySelectorAll('td').length==2){
+                table.rows[currentRow].cells[1].focus();
+            }else{
+                table.rows[currentRow].cells[currentCol].focus();
+            }
+
+
+            
         }
         break;
         
@@ -511,6 +546,7 @@ table.addEventListener("keydown", function(event) {
         if (currentCol == 0){
             //var today = new Date();
             //var mmdd = (today.getMonth() + 1).toString().padStart(2, '0') + today.getDate().toString().padStart(2, '0');
+            table = document.getElementById("myTable");
             
             currentDate = document.getElementById("currentDate");
             //var today = Date(currentDate.innerText)
@@ -524,6 +560,7 @@ table.addEventListener("keydown", function(event) {
 
         // 第二格 (魚種)            
         if (currentCol == 1){
+            table = document.getElementById("myTable");
             data = table.rows[currentRow].cells[currentCol].innerText
             data=checkFishColor(data)
             
@@ -653,11 +690,16 @@ table.addEventListener("keydown", function(event) {
 
                 // 每次進行計算後累積當前結果
                 sum=0
+
                 for (i=0 ;i<table.rows.length;i++){
                     
-                    var isNumeric = !isNaN(table.rows[i].cells[6].innerText);
-                    if (isNumeric){
-                        sum+=Math.round(table.rows[i].cells[6].innerText)
+                    if (table.rows[i].querySelectorAll('td').length>2){
+
+                    
+                        var isNumeric = !isNaN(table.rows[i].cells[6].innerText);
+                        if (isNumeric){
+                            sum+=Math.round(table.rows[i].cells[6].innerText)
+                        }
                     }
                     
                 }
