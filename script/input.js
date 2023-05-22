@@ -2,6 +2,8 @@ let dictionary = {};
 let accountDate = {};
 
 let index=0
+let currentRow = 2;
+let currentCol = 0;
 
 
 function loadPage(){
@@ -26,25 +28,24 @@ function loadPage(){
 
     var userid=""
     var userDate=""
-    // 取得今天的使用者
+    // 取得今天使用者的詳細資料
     fetch('/get_today_customer_name')
     .then(response => response.json()) // 將回傳的資料轉為 JSON 格式
     .then(data => {
-        // 將 JSON 格式資料存入 dictionary 變數
+        // 讀取今日的使用者資料
         for (let i = 0; i < data.length; i++) {
             customer.innerHTML=data[i].name
             pre_count.innerHTML=parseFloat(data[i].totalArrears)
             let date = new Date(data[i].date);
             let formattedDate = date.toISOString().split('T')[0];
+            // 取得當天的日期
             var currentDate = document.getElementById("currentDate");
             currentDate.innerText=formattedDate;
+            // 取得當前使用者 ID
             var customerID = document.getElementById("customerID");
             customerID.innerText=data[i].id
-            
             userid=data[i].id
             userDate=new Date(data[i].date)
-
-            //
         }
             //var url = "/accountDetail?id=" + table_select_id.innerText
         // 新增下一列,繼續進行運作
@@ -52,14 +53,11 @@ function loadPage(){
         rowCount = detail_table3.rows.length;
 
         var dateObject = new Date(userDate);
+        // 轉換格式為 YYYY-MM-DD
         var datePart = dateObject.toISOString().split('T')[0];
-        // 檢查資料如果已經讀取不重複讀取
-        
-        //LoadDetail(rowCount,datePart,userid)        
-        LoadDetail(rowCount,datePart,userid)
-            // 顯示 dictionary 變數內容
-        console.log(dictionary);
 
+        // 讀取所有帳目細項     
+        LoadDetail(rowCount,datePart,userid)
 
         fetch("/get_customer_account_date?id="+userid)
         .then(response => response.json()) // 將回傳的資料轉為 JSON 格式
@@ -68,7 +66,6 @@ function loadPage(){
         for (let i = 0; i < data.length; i++) {
             accountDate[i] = data[i];
         }
-
 
         str =accountDate[0]
         parts = str.split(",");
@@ -103,7 +100,7 @@ function loadPage(){
 
 };
 
-// 讀取詳細資料
+// 讀取帳目詳細資料
 function LoadDetail(rowCount,datePart,userid){
 
     var current_count = document.getElementById("current_count");
@@ -112,7 +109,9 @@ function LoadDetail(rowCount,datePart,userid){
     var index=0
     var detail_table3 = document.getElementById("myTable");
     if (rowCount == 2) {
-        fetch("/accountDetail?id="+userid+"&date="+datePart)
+        // 修改成讀取全部數據
+        //fetch("/accountDetail?id="+userid+"&date="+datePart)
+        fetch("/accountDetail?id="+userid)
           .then(response => response.json())
           .then(data => {
             data.forEach(item => {
@@ -150,32 +149,29 @@ function LoadDetail(rowCount,datePart,userid){
             
             firstRow = table.querySelector("tr")
             cells = firstRow.querySelectorAll("td");
+            
+            
             cells.forEach(cell => {
                 cell.textContent = "";
             });
+            
             firstRow.style.display="none";
-            currentRow = 1;
+
+            // 讀取完數據後再定位
+            table.rows[currentRow].cells[currentCol].focus();
+            
 
           })
           .catch(error => {
             firstRow = table.querySelector("tr").style.display="";
             currentRow = 1;
+            table.rows[currentRow].cells[currentCol].focus();
             //document.getElementById('myTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0].getElementsByTagName('td')[0].focus()
             //document.getElementById('myTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0].getElementsByTagName('td')[0].focus()
             //alert(error)
           });
           
       }
-
-      /*
-      fetch("/get_customer_account_date?id="+userid)
-        .then(response => response.json()) // 將回傳的資料轉為 JSON 格式
-        .then(data => {
-        // 將 JSON 格式資料存入 dictionary 變數
-        for (let i = 0; i < data.length; i++) {
-            accountDate[i] = data[i];
-        }
-      */
     
 }
 
@@ -422,9 +418,6 @@ function checkFishColor(number) {
 var table = document.getElementById("myTable");
 
 
-var currentRow = 1;
-var currentCol = 0;
-table.rows[currentRow].cells[currentCol].focus();
 table.addEventListener("keydown", function(event) {
 
     var key = event.which || event.keyCode;
@@ -513,6 +506,7 @@ table.addEventListener("keydown", function(event) {
         }
         break;
         case 39: // right arrow
+        table = document.getElementById('myTable');
         if (currentCol < table.rows[currentRow].cells.length - 2) {
             currentCol++;
             table.rows[currentRow].cells[currentCol].focus();
@@ -544,17 +538,16 @@ table.addEventListener("keydown", function(event) {
 
         // 第一格 (產生日期)
         if (currentCol == 0){
-            //var today = new Date();
-            //var mmdd = (today.getMonth() + 1).toString().padStart(2, '0') + today.getDate().toString().padStart(2, '0');
-            table = document.getElementById("myTable");
             
+            table = document.getElementById("myTable");
             currentDate = document.getElementById("currentDate");
-            //var today = Date(currentDate.innerText)
-            //var mmdd = (today.getMonth() + 1).toString().padStart(2, '0') + today.getDate().toString().padStart(2, '0');
+            
+            if (table.rows[currentRow].cells[currentCol].innerText==""){
+                table.rows[currentRow].cells[currentCol].innerText = currentDate.innerText;
+                currentCol++;
+                table.rows[currentRow].cells[currentCol].focus();
+            }
 
-            table.rows[currentRow].cells[currentCol].innerText = currentDate.innerText;
-            currentCol++;
-            table.rows[currentRow].cells[currentCol].focus();
             break;
         }
 
@@ -577,6 +570,7 @@ table.addEventListener("keydown", function(event) {
 
         // 第三格 (重量)            
         if (currentCol == 2){
+            table = document.getElementById("myTable");
             data = table.rows[currentRow].cells[currentCol].innerText
             if (data!=""){
             table.rows[currentRow].cells[currentCol].focus();
@@ -588,6 +582,7 @@ table.addEventListener("keydown", function(event) {
 
         // 第四格 (單價)            
         if (currentCol == 3){
+            table = document.getElementById("myTable");
             data = table.rows[currentRow].cells[currentCol].innerText
             if (data!=""){
             table.rows[currentRow].cells[currentCol].focus();
@@ -599,7 +594,7 @@ table.addEventListener("keydown", function(event) {
 
         // 第五格 (分)            
         if (currentCol == 4){
-
+            table = document.getElementById("myTable");
             data = table.rows[currentRow].cells[currentCol].innerText
 
             if (data==""){
@@ -614,6 +609,7 @@ table.addEventListener("keydown", function(event) {
         // 第六格 (龍)
         if (currentCol == 5){
 
+            table = document.getElementById("myTable");
             if (table.rows[currentRow].cells[currentCol].innerHTML==2){
                 table.rows[currentRow].cells[currentCol].innerHTML="小"
             }
@@ -634,6 +630,7 @@ table.addEventListener("keydown", function(event) {
         }
         // 第七格 (總價)
         if (currentCol == 6){
+            table = document.getElementById("myTable");
             // 檢查欄位是否都有數值
             check_empty=1
             for (var i = 0; i < 6;i++){
