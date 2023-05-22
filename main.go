@@ -35,15 +35,16 @@ type FishList struct {
 	Fishes []Fish `json:"fishes"`
 }
 type Customer struct {
-	ID           int       `json:"id"`
-	Name         string    `json:"name"`
-	Setting      string    `json:"setting"`
-	Date         time.Time `json:"date"`
-	TotalArrears int       `json:"totalArrears"`
-	TodayArrears int       `json:"todayArrears"`
-	Payments     int       `json:"Payments"`
-	Clear        bool      `json:"Clear"`
-	Sort         int       `json:"sort"`
+	ID             int       `json:"id"`
+	Name           string    `json:"name"`
+	Setting        string    `json:"setting"`
+	Date           time.Time `json:"date"`
+	TotalArrears   int       `json:"totalArrears"`
+	TodayArrears   int       `json:"todayArrears"`
+	Payments       int       `json:"Payments"`
+	PaymentsResult string    `json:"PaymentsResult"`
+	Clear          bool      `json:"Clear"`
+	Sort           int       `json:"sort"`
 }
 type CustomerList struct {
 	Customers []Customer `json:"customers"`
@@ -86,7 +87,8 @@ func init_db() {
 		TodayArrears Int,
 		Payments Int,
 		Clear Bool,
-		Sort INTEGER
+		Sort INTEGER,
+		PaymentsResult TEXT
 	)`)
 	if err != nil {
 		fmt.Println(err)
@@ -117,7 +119,7 @@ func init_db() {
 	fmt.Println("today_customer 資料表建立成功")
 }
 
-func insertSelectCustomer(name string, id int, date time.Time, sort int, TodayArrears int) error {
+func insertSelectCustomer(setting string, name string, id int, date time.Time, sort int, TodayArrears int, PaymentsResult string) error {
 
 	db, err := sql.Open("sqlite3", DB_Name)
 	if err != nil {
@@ -141,12 +143,13 @@ func insertSelectCustomer(name string, id int, date time.Time, sort int, TodayAr
 	}
 
 	if index == 0 {
-		_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears,Sort,Payments,Clear) VALUES (?, ?, 0,?,?,?,?,0,false)`, name, id, date, 0, 0, sort)
+		_, err = db.Exec(`INSERT INTO today_customer (Name, ID, Setting, Date,TotalArrears,TodayArrears,Sort,Payments,Clear,PaymentsResult) VALUES (?, ?, 0,?,?,?,?,0,false,'')`, name, id, date, 0, 0, sort)
 		if err != nil {
 			return fmt.Errorf("failed to insert customer: %v", err)
 		}
 	} else {
-		_, err = db.Exec(`UPDATE today_customer SET Setting = ?, Sort = ? WHERE date = ? AND id = ?;`, 0, sort, date, id)
+		fmt.Print(PaymentsResult)
+		_, err = db.Exec(`UPDATE today_customer SET Setting = ?, Sort = ?,PaymentsResult = ? WHERE date = ? AND id = ?;`, setting, sort, PaymentsResult, date, id)
 		if err != nil {
 			return fmt.Errorf("failed to insert customer: %v", err)
 		}
@@ -443,7 +446,7 @@ func getAllAccountCustomer(c *gin.Context) {
 	// 迭代查詢結果，並將結果加入 slice
 	for rows.Next() {
 		var customer Customer
-		err := rows.Scan(&customer.ID, &customer.Name, &customer.Setting, &customer.Date, &customer.TodayArrears, &customer.TotalArrears, &customer.Sort, &customer)
+		err := rows.Scan(&customer.ID, &customer.Name, &customer.Setting, &customer.Date, &customer.TodayArrears, &customer.TotalArrears, &customer.Sort, &customer.Payments, &customer.PaymentsResult)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -531,7 +534,7 @@ func getCustomAccount(c *gin.Context) {
 		for rows.Next() {
 			var fish Fish
 			print := false
-			err := rows.Scan(&fish.ID, &fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &print)
+			err := rows.Scan(&fish.ID, &fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &print, &fish.INDEX)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -556,7 +559,7 @@ func set_today_customer_name(c *gin.Context) {
 		return
 	}
 	for _, customer := range customers {
-		insertSelectCustomer(customer.Name, customer.ID, customer.Date, customer.Sort, customer.TodayArrears)
+		insertSelectCustomer(customer.Setting, customer.Name, customer.ID, customer.Date, customer.Sort, customer.TodayArrears, customer.PaymentsResult)
 	}
 
 	fmt.Println(customers)
@@ -637,7 +640,7 @@ func get_today_customer_name(c *gin.Context) {
 	// 迭代查詢結果，並將結果加入 slice
 	for rows.Next() {
 		var customer Customer
-		err := rows.Scan(&customer.ID, &customer.Name, &customer.Setting, &customer.Date, &customer.TotalArrears, &customer.TodayArrears, &customer.Payments, &customer.Clear, &customer.Sort)
+		err := rows.Scan(&customer.ID, &customer.Name, &customer.Setting, &customer.Date, &customer.TotalArrears, &customer.TodayArrears, &customer.Payments, &customer.Clear, &customer.Sort, &customer.PaymentsResult)
 		if err != nil {
 			log.Fatal(err)
 		}

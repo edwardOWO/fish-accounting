@@ -110,8 +110,8 @@ function LoadDetail(rowCount,datePart,userid){
     var detail_table3 = document.getElementById("myTable");
     if (rowCount == 2) {
         // 修改成讀取全部數據
-        //fetch("/accountDetail?id="+userid+"&date="+datePart)
-        fetch("/accountDetail?id="+userid)
+        fetch("/accountDetail?id="+userid+"&date="+datePart)
+        //fetch("/accountDetail?id="+userid)
           .then(response => response.json())
           .then(data => {
             data.forEach(item => {
@@ -167,12 +167,9 @@ function LoadDetail(rowCount,datePart,userid){
 
             table = detail_table3.querySelector("tbody");
             table.rows[currentRow].cells[currentCol].focus();
-            
-            
 
-            
-            
-
+            // 測試打印共帳資訊
+            TestInsert(datePart)
           })
           .catch(error => {
             firstRow = table.querySelector("tr").style.display="";
@@ -276,8 +273,19 @@ testButton2.onclick = function(){
     cell.innerText=document.getElementById("currentDate").innerText;
     cell.colSpan = 1;
     cell.contentEditable = true;
-
-
+}
+function TestInsert(datePart){
+    var newRow = table.insertRow(-1);
+    var totalColumns = table.rows[0].cells.length;
+    var cell = newRow.insertCell(0);
+    cell.colSpan = 7;
+    cell.contentEditable = true;
+    cell.innerText = "共:"+document.getElementById("current_count").innerText;
+    cell.style.textAlign = "mid";
+    var cell = newRow.insertCell(0);
+    cell.innerText=datePart;
+    cell.colSpan = 1;
+    cell.contentEditable = true;
 }
 
 testButton.onclick = function(){
@@ -289,12 +297,37 @@ testButton.onclick = function(){
     cell.colSpan = 7;
     cell.contentEditable = true;
     sum=parseInt(document.getElementById("current_count").innerText)-test
-    cell.innerText = "共: "+document.getElementById("current_count").innerText+" 入:"+test+" 欠:"+sum;
+    accountResult= "共: "+document.getElementById("current_count").innerText+" 入:"+test+" 欠:"+sum;
+    cell.innerText =accountResult
     cell.style.textAlign = "mid";
     var cell = newRow.insertCell(0);
     cell.innerText=document.getElementById("currentDate").innerText;
     cell.colSpan = 1;
     cell.contentEditable = true;
+
+    customerID = document.getElementById("customerID");
+    customer = document.getElementById("customer");
+    currentDate = document.getElementById("currentDate");
+
+    var timestamp = Date.parse(currentDate.innerText);
+    var date = new Date(timestamp);
+    const data = [];
+
+    data.push({
+        id: parseInt(customerID.innerText),
+        name: customer.innerText,
+        date: date,
+        sort: parseInt("1"),
+        setting: "1",
+        TotalArrears: 0,
+        TodayArrears: 0,
+        PaymentsResult: accountResult,
+      });
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/set_today_customer_name');
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    xhr.send(JSON.stringify(data));
 }
 function showPrompt() {
  
@@ -365,7 +398,7 @@ function submitTable(){
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     xhr.send(JSON.stringify(data));
 
-    var customer = document.getElementById("customer");
+ 
     
     // 重整讀取下一個客戶的資料
     window.location.reload();window.location.reload();
@@ -447,6 +480,7 @@ function submitTable2(){
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     xhr.send(JSON.stringify(data));
 
+    
     var customer = document.getElementById("customer");
     
     // 重整讀取下一個客戶的資料
@@ -489,9 +523,7 @@ table.addEventListener("keydown", function(event) {
                 index+=1
             }
 
-            str =accountDate[index]
-            parts = str.split(",");
-            currentDate.innerText=parts[0]
+            
 
             if (parts[1]=="true"){
                 repayment_status.innerHTML="已還款"
@@ -501,8 +533,21 @@ table.addEventListener("keydown", function(event) {
                 repayment_status.style.color="red"
             }
 
-
+            str =accountDate[2]
+            parts = str.split(",");
+            currentDate.innerText=parts[0]
             LoadDetail("2",currentDate.innerText,1)
+
+            str =accountDate[1]
+            parts = str.split(",");
+            currentDate.innerText=parts[0]
+            LoadDetail("2",currentDate.innerText,1)
+
+            
+            //str =accountDate[0]
+            //parts = str.split(",");
+            //currentDate.innerText=parts[0]
+            //LoadDetail("2",currentDate.innerText,1)
         break
 
             case 34: // left arrow
