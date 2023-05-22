@@ -100,6 +100,7 @@ function loadPage(){
 
 };
 
+
 // 讀取帳目詳細資料
 function LoadDetail(rowCount,datePart,userid){
 
@@ -110,16 +111,28 @@ function LoadDetail(rowCount,datePart,userid){
     var detail_table3 = document.getElementById("myTable");
     if (rowCount == 2) {
         // 修改成讀取全部數據
-        fetch("/accountDetail?id="+userid+"&date="+datePart)
-        //fetch("/accountDetail?id="+userid)
+        //fetch("/accountDetail?id="+userid+"&date="+datePart)
+        let predate=""
+        fetch("/accountDetail?id="+userid)
           .then(response => response.json())
           .then(data => {
             data.forEach(item => {
+
+
+              var dateObject = new Date(item.date);
+              var datePart = dateObject.toISOString().split('T')[0];
+
+              // 當日期不相同時,中間插入前次結帳的訊息
+              if (predate !=datePart && predate!=""){
+                TestInsert(predate,userid)
+                predate=datePart
+              }else{
+                predate=datePart
+              }
+
               var newRow = detail_table3.insertRow(-1);
               var cell = newRow.insertCell();
               cell.contentEditable = true;
-              var dateObject = new Date(item.date);
-              var datePart = dateObject.toISOString().split('T')[0];
               cell.innerText = datePart
               var cell = newRow.insertCell();
               cell.contentEditable = true;
@@ -139,24 +152,20 @@ function LoadDetail(rowCount,datePart,userid){
               var cell = newRow.insertCell();
               cell.contentEditable = true;
               cell.innerText = item.totalPrice
-
               var cell = newRow.insertCell();
               cell.contentEditable = true;
               cell.innerText = item.index;
               data_index= parseInt(item.index)
               sum+= parseInt(item.totalPrice)
-              
+            
             });
   
             current_count.innerHTML=sum
             document.getElementById('myTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr')[1].getElementsByTagName('td')[0].focus()
             table = detail_table3.querySelector("tbody"); 
-            
-            
             firstRow = table.querySelector("tr")
             cells = firstRow.querySelectorAll("td");
             //firstRow.style.display="none";
-            
             
             cells.forEach(cell => {
                 cell.textContent = "";
@@ -169,7 +178,12 @@ function LoadDetail(rowCount,datePart,userid){
             table.rows[currentRow].cells[currentCol].focus();
 
             // 測試打印共帳資訊
-            TestInsert(datePart)
+            //TestInsert(datePart)
+
+            return 87;
+          })
+          .then((a) => {
+            alert(a);
           })
           .catch(error => {
             firstRow = table.querySelector("tr").style.display="";
@@ -274,18 +288,36 @@ testButton2.onclick = function(){
     cell.colSpan = 1;
     cell.contentEditable = true;
 }
-function TestInsert(datePart){
+let point=null
+function TestInsert(datePart,userid){
+
     var newRow = table.insertRow(-1);
     var totalColumns = table.rows[0].cells.length;
     var cell = newRow.insertCell(0);
     cell.colSpan = 7;
     cell.contentEditable = true;
     cell.innerText = "共:"+document.getElementById("current_count").innerText;
+
+    point =cell.innerText;
+
     cell.style.textAlign = "mid";
     var cell = newRow.insertCell(0);
     cell.innerText=datePart;
     cell.colSpan = 1;
     cell.contentEditable = true;
+
+
+    /*
+    fetch("/get_customer_account_result?id="+userid+"&date="+datePart)
+    .then(response => response.json()) // 將回傳的資料轉為 JSON 格式
+    .then(data => {
+    // 將 JSON 格式資料存入 dictionary 變數
+    
+        point.innerText=data[0]
+        alert(data[0])    
+    })
+    */
+    
 }
 
 testButton.onclick = function(){
@@ -538,10 +570,10 @@ table.addEventListener("keydown", function(event) {
             currentDate.innerText=parts[0]
             LoadDetail("2",currentDate.innerText,1)
 
-            str =accountDate[1]
-            parts = str.split(",");
-            currentDate.innerText=parts[0]
-            LoadDetail("2",currentDate.innerText,1)
+            //str =accountDate[1]
+            //parts = str.split(",");
+            //currentDate.innerText=parts[0]
+            //LoadDetail("2",currentDate.innerText,1)
 
             
             //str =accountDate[0]

@@ -236,6 +236,9 @@ func main() {
 	// 讀取今天的帳款
 	router.GET("/get_customer_account_date", get_customer_account_date)
 
+	// 讀取帳目結果
+	router.GET("/get_customer_account_result", get_customer_account_result)
+
 	// 取得魚種資訊
 	router.GET("/get_product_name", handleProduct)
 
@@ -618,6 +621,52 @@ func get_customer_account_date(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, get_customer_account_date)
+
+}
+
+func get_customer_account_result(c *gin.Context) {
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	id := c.Query("id")
+	date := c.Query("date")
+
+	dateString := date
+	dateLayout := "2006-01-02" // 指定日期字符串的格式
+
+	t, err := time.Parse(dateLayout, dateString)
+	if err != nil {
+		fmt.Println("日期解析错误:", err)
+		return
+	}
+
+	rows, err := db.Query("SELECT PaymentsResult  FROM today_customer where ID =? AND Date=? ORDER BY Date DESC", id, t)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	var get_customer_account_result []string
+	for rows.Next() {
+
+		str := ""
+		err := rows.Scan(&str)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		get_customer_account_result = append(get_customer_account_result, str)
+	}
+
+	// 檢查是否有迭代中發生錯誤
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	c.JSON(http.StatusOK, get_customer_account_result)
 
 }
 
