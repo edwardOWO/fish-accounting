@@ -28,6 +28,7 @@ type Fish struct {
 	Package      string  `json:"package"`
 	TotalPrice   int     `json:"totalPrice"`
 	CustomerName string  `json:"customerName"`
+	INDEX        int     `json:"index"`
 }
 
 type FishList struct {
@@ -103,7 +104,8 @@ func init_db() {
 		Fraction TEXT,
 		Package TEXT,
 		TotalPrice INTEGER,
-		Print Bool
+		Print Bool,
+		DataIndex INTEGER
 	)`)
 	if err != nil {
 		fmt.Println(err)
@@ -299,7 +301,7 @@ func handlePostFish(c *gin.Context) {
 
 	layout := "2006-01-02"
 	// 解析日期字符串
-	userID := 0
+
 	day := ""
 	day = fishes[0].Date
 
@@ -309,41 +311,38 @@ func handlePostFish(c *gin.Context) {
 		return
 	} // 解析日期字符串
 
-	TodayArrears := 0
-
 	//  先刪除當天的所有數據,待後續寫入數據
-	_, err = db.Exec(`DELETE from accountDetail WHERE date(Date) = date(?) AND ID=?`, t, fishes[0].ID)
+	//_, err = db.Exec(`DELETE from accountDetail WHERE date(Date) = date(?) AND ID=?`, t, fishes[0].ID)
 
-	if err != nil {
-		fmt.Print(err.Error())
-	}
+	//if err != nil {
+	//	fmt.Print(err.Error())
+	//}
 
 	// 寫入當天的所有數據
 	for _, detail := range fishes {
 
-		// 如果數據都刪除了,僅有一筆為 DELETE參數時,表示所有資料都刪除,故不再寫入到系統
-		if detail.CustomerName != "DELETE" {
-			TodayArrears += detail.TotalPrice
-
-			// 將詳細帳單輸入到欄位中
-			_, err = db.Exec(`INSERT INTO accountDetail (ID,CustomerName, Date, FishName, Weight,Price,Fraction,Package,TotalPrice,Print) VALUES (?,?, ?, ?,?,?,?,?,?,?)`, detail.ID, detail.CustomerName, t, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false)
-			if err != nil {
-				fmt.Print(err.Error())
-			}
-			userID = detail.ID
+		var count int
+		err := db.QueryRow("SELECT COUNT(*) FROM accountDetail WHERE DataIndex = ? AND Date = ?", detail.INDEX, t).Scan(&count)
+		if err != nil {
+			count = 1
 		}
+
+		if count > 0 {
+			// 执行更新操作
+			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ? WHERE DataIndex = ? AND Date = ?",
+				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.INDEX, t)
+		} else {
+			// 执行插入操作
+			_, err = db.Exec("INSERT INTO accountDetail (ID, CustomerName, Date, FishName, Weight, Price, Fraction, Package, TotalPrice, Print, DataIndex) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+				detail.ID, detail.CustomerName, t, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.INDEX)
+		}
+
 	}
 
 	// 更新今天的帳目,並且標記已經處理
-	query := "UPDATE today_customer SET Setting=?,TodayArrears=? WHERE date=? AND ID=?"
-	result, err := db.Exec(query, 1, TodayArrears, t, fishes[0].ID)
-	fmt.Print(result)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	// 加總使用者帳款,如果 Clear 欄位為1(true),表示已經還款故不再加總計算
-	rows, err := db.Query(`select TodayArrears from  today_customer WHERE  ID=1 and Clear=0`, fishes[0].ID)
+	rows, err := db.Query(`select TotalPrice from  accountDetail WHERE  ID=? and Date=?`, fishes[0].ID, t)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -361,9 +360,35 @@ func handlePostFish(c *gin.Context) {
 		TotalArrears += data
 	}
 
+	query := "UPDATE today_customer SET Setting=?,TodayArrears=? WHERE date=? AND ID=?"
+	result, err := db.Exec(query, 0, TotalArrears, t, fishes[0].ID)
+	fmt.Print(result)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 加總使用者帳款,如果 Clear 欄位為1(true),表示已經還款故不再加總計算
+	TotalArrears = 0
+	rows, err = db.Query(`select TodayArrears from  today_customer WHERE  ID=? and Clear=0`, fishes[0].ID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		data := 0
+		err := rows.Scan(&data)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		TotalArrears += data
+	}
+
 	// 更新當前所有的欠款數到 Customer
 	query = "UPDATE Customer SET TotalArrears=? where id=?"
-	_, err = db.Exec(query, TotalArrears, userID)
+	_, err = db.Exec(query, TotalArrears, fishes[0].ID)
 
 	if err != nil {
 		log.Fatal(err)
@@ -418,7 +443,7 @@ func getAllAccountCustomer(c *gin.Context) {
 	// 迭代查詢結果，並將結果加入 slice
 	for rows.Next() {
 		var customer Customer
-		err := rows.Scan(&customer.ID, &customer.Name, &customer.Setting, &customer.Date, &customer.TodayArrears, &customer.TotalArrears, &customer.Sort)
+		err := rows.Scan(&customer.ID, &customer.Name, &customer.Setting, &customer.Date, &customer.TodayArrears, &customer.TotalArrears, &customer.Sort, &customer)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -463,7 +488,7 @@ func getCustomAccount(c *gin.Context) {
 		for rows.Next() {
 			var fish Fish
 			print := false
-			err := rows.Scan(&fish.ID, &fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &print)
+			err := rows.Scan(&fish.ID, &fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &print, &fish.INDEX)
 			if err != nil {
 				log.Fatal(err)
 			}

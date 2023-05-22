@@ -4,7 +4,7 @@ let accountDate = {};
 let index=0
 let currentRow = 2;
 let currentCol = 0;
-
+let data_index=0;
 
 function loadPage(){
 
@@ -139,7 +139,13 @@ function LoadDetail(rowCount,datePart,userid){
               var cell = newRow.insertCell();
               cell.contentEditable = true;
               cell.innerText = item.totalPrice
+
+              var cell = newRow.insertCell();
+              cell.contentEditable = true;
+              cell.innerText = item.index;
+              data_index= parseInt(item.index)
               sum+= parseInt(item.totalPrice)
+              
             });
   
             current_count.innerHTML=sum
@@ -149,16 +155,22 @@ function LoadDetail(rowCount,datePart,userid){
             
             firstRow = table.querySelector("tr")
             cells = firstRow.querySelectorAll("td");
+            //firstRow.style.display="none";
             
             
             cells.forEach(cell => {
                 cell.textContent = "";
             });
-            
-            firstRow.style.display="none";
-
             // 讀取完數據後再定位
+            currentRow = 2;
+            currentCol=0;
+
+            table = detail_table3.querySelector("tbody");
             table.rows[currentRow].cells[currentCol].focus();
+            
+            
+
+            
             
 
           })
@@ -256,23 +268,39 @@ testButton2.onclick = function(){
     var newRow = table.insertRow(-1);
     var totalColumns = table.rows[0].cells.length;
     var cell = newRow.insertCell(0);
-    cell.colSpan = 6;
+    cell.colSpan = 7;
     cell.contentEditable = true;
+    cell.innerText = "共:"+document.getElementById("current_count").innerText;
+    cell.style.textAlign = "mid";
     var cell = newRow.insertCell(0);
+    cell.innerText=document.getElementById("currentDate").innerText;
     cell.colSpan = 1;
     cell.contentEditable = true;
+
+
 }
 
 testButton.onclick = function(){
     
     showPrompt()
-    document.getElementById('myButton').click()
+    var newRow = table.insertRow(-1);
+    var totalColumns = table.rows[0].cells.length;
+    var cell = newRow.insertCell(0);
+    cell.colSpan = 7;
+    cell.contentEditable = true;
+    sum=parseInt(document.getElementById("current_count").innerText)-test
+    cell.innerText = "共: "+document.getElementById("current_count").innerText+" 入:"+test+" 欠:"+sum;
+    cell.style.textAlign = "mid";
+    var cell = newRow.insertCell(0);
+    cell.innerText=document.getElementById("currentDate").innerText;
+    cell.colSpan = 1;
+    cell.contentEditable = true;
 }
 function showPrompt() {
  
       test = prompt("還款/輸入-1為全部還款", 0);
       
-
+      /*
       customerID = document.getElementById("customerID");
       currentDate = document.getElementById("currentDate");
 
@@ -318,13 +346,31 @@ function showPrompt() {
         });
 
     }
+    */
     
 
     
 }
 
-myButton.onclick = function() {
+function submitTable(){
+    
 
+   
+
+
+
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/accountDetail');
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    xhr.send(JSON.stringify(data));
+
+    var customer = document.getElementById("customer");
+    
+    // 重整讀取下一個客戶的資料
+    window.location.reload();window.location.reload();
+}
+function submitTable2(){
     checkDate=false
     //const form = document.getElementById('myTable');
     table = document.getElementById('myTable');
@@ -347,6 +393,7 @@ myButton.onclick = function() {
         const fraction = cells[4].innerText;
         const package = cells[5].innerText;
         const totalPrice= cells[6].innerText;
+        const dataIndex= cells[7].innerText;
 
         // 取得客戶資料
         var customer = document.getElementById("customer");
@@ -370,6 +417,7 @@ myButton.onclick = function() {
         package: package,
         totalPrice: parseInt(totalPrice),
         customerName: customerName,
+        index: parseInt(dataIndex),
         });
     }
 
@@ -403,8 +451,10 @@ myButton.onclick = function() {
     
     // 重整讀取下一個客戶的資料
     window.location.reload();window.location.reload();
+}
 
-    
+myButton.onclick = function() {
+    submitTable
 };
 
 
@@ -685,6 +735,14 @@ table.addEventListener("keydown", function(event) {
 
                 table.rows[currentRow].cells[6].innerHTML = result
 
+
+                // 索引 +1
+                if (table.rows[currentRow].cells[7].innerHTML=="") {
+                    table.rows[currentRow].cells[7].innerHTML = data_index;
+                }
+
+                data_index++;
+
                 // 每次進行計算後累積當前結果
                 sum=0
 
@@ -701,6 +759,40 @@ table.addEventListener("keydown", function(event) {
                     
                 }
                 current_count.innerHTML=sum
+
+
+                // 將該行資料庫寫入
+                const data = [];
+                var customerID = document.getElementById("customerID");
+                id = customerID.innerText;
+                var customer = document.getElementById("customer");
+                customerName = customer.innerText;
+
+                data.push({
+                    id: parseInt(id),
+                    date: table.rows[currentRow].cells[0].innerHTML,
+                    fishName: table.rows[currentRow].cells[1].innerHTML,
+                    weight: parseFloat(table.rows[currentRow].cells[2].innerHTML),
+                    price: parseInt(table.rows[currentRow].cells[3].innerHTML),
+                    fraction: parseFloat(table.rows[currentRow].cells[4].innerHTML),
+                    package: table.rows[currentRow].cells[5].innerHTML,
+                    totalPrice: parseInt(table.rows[currentRow].cells[6].innerHTML),
+                    customerName: customerName,
+                    index: parseInt(table.rows[currentRow].cells[7].innerHTML),
+                    });
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/accountDetail');
+                xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+                xhr.send(JSON.stringify(data));
+            
+                var customer = document.getElementById("customer");
+
+
+
+
+
+
 
                 // 檢查是否為最後一列
                 if(table.rows.length-1 != currentRow){
