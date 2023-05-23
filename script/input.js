@@ -119,51 +119,40 @@ function LoadDetail(rowCount,datePart,userid){
           .then(response => response.json())
           .then(data => {
             data.forEach(item => {
-
-
               var dateObject = new Date(item.date);
               var datePart = dateObject.toISOString().split('T')[0];
-
-              // 當日期不相同時,中間插入前次結帳的訊息
-              if (predate !=datePart && predate!=""){
-                TestInsert(predate,result)
-                result=item.paymentsresult
-                predate=datePart
-                table_index++
+              if (item.index==9999){
+                TestInsert(datePart,item.paymentsresult)
               }else{
-                result=item.paymentsresult
-                predate=datePart
+                var newRow = detail_table3.insertRow(-1);
+                var cell = newRow.insertCell();
+                cell.contentEditable = true;
+                cell.innerText = datePart
+                var cell = newRow.insertCell();
+                cell.contentEditable = true;
+                cell.innerText = item.fishName
+                var cell = newRow.insertCell();
+                cell.contentEditable = true;
+                cell.innerText = item.weight
+                var cell = newRow.insertCell();
+                cell.contentEditable = true;
+                cell.innerText = item.price
+                var cell = newRow.insertCell();
+                cell.contentEditable = true;
+                cell.innerText = item.fraction
+                var cell = newRow.insertCell();
+                cell.contentEditable = true;
+                cell.innerText = item.package
+                var cell = newRow.insertCell();
+                cell.contentEditable = true;
+                cell.innerText = item.totalPrice
+                var cell = newRow.insertCell();
+                cell.contentEditable = true;
+                cell.innerText = item.index;
+                data_index= parseInt(item.index)
               }
-
-              var newRow = detail_table3.insertRow(-1);
-              var cell = newRow.insertCell();
-              cell.contentEditable = true;
-              cell.innerText = datePart
-              var cell = newRow.insertCell();
-              cell.contentEditable = true;
-              cell.innerText = item.fishName
-              var cell = newRow.insertCell();
-              cell.contentEditable = true;
-              cell.innerText = item.weight
-              var cell = newRow.insertCell();
-              cell.contentEditable = true;
-              cell.innerText = item.price
-              var cell = newRow.insertCell();
-              cell.contentEditable = true;
-              cell.innerText = item.fraction
-              var cell = newRow.insertCell();
-              cell.contentEditable = true;
-              cell.innerText = item.package
-              var cell = newRow.insertCell();
-              cell.contentEditable = true;
-              cell.innerText = item.totalPrice
-              var cell = newRow.insertCell();
-              cell.contentEditable = true;
-              cell.innerText = item.index;
-              data_index= parseInt(item.index)
-              sum+= parseInt(item.totalPrice)
               table_index++
-            
+
             });
 
             if (result!=""){
@@ -187,8 +176,7 @@ function LoadDetail(rowCount,datePart,userid){
             currentRow+=table_index;
             currentRow++;
 
-            alert("table_index: "+table_index);
-
+    
             table = detail_table3.querySelector("tbody");
             
 
@@ -209,9 +197,6 @@ function LoadDetail(rowCount,datePart,userid){
             firstRow = table.querySelector("tr").style.display="";
             currentRow = 1;
             table.rows[currentRow].cells[currentCol].focus();
-            //document.getElementById('myTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0].getElementsByTagName('td')[0].focus()
-            //document.getElementById('myTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0].getElementsByTagName('td')[0].focus()
-            //alert(error)
           });
           
       }
@@ -348,8 +333,9 @@ testButton.onclick = function(){
     var cell = newRow.insertCell(0);
     cell.colSpan = 7;
     cell.contentEditable = true;
-    sum=parseInt(document.getElementById("current_count").innerText)-test
-    accountResult= "共: "+document.getElementById("current_count").innerText+" 入:"+test+" 欠:"+sum;
+    sum=input
+    //accountResult= "共: "+document.getElementById("current_count").innerText+" 入:"+test+" 欠:"+sum;
+    accountResult=""
     cell.innerText =accountResult
     cell.style.textAlign = "mid";
     var cell = newRow.insertCell(0);
@@ -363,27 +349,38 @@ testButton.onclick = function(){
 
     var timestamp = Date.parse(currentDate.innerText);
     var date = new Date(timestamp);
+
+
     const data = [];
+    var customerID = document.getElementById("customerID");
+    id = customerID.innerText;
+    var customer = document.getElementById("customer");
+    customerName = customer.innerText;
 
     data.push({
-        id: parseInt(customerID.innerText),
-        name: customer.innerText,
-        date: date,
-        sort: parseInt("1"),
-        setting: "1",
-        TotalArrears: 0,
-        TodayArrears: 0,
-        PaymentsResult: accountResult,
-      });
+        id: parseInt(id),
+        date: currentDate.innerHTML,
+        fishName: "",
+        weight: parseFloat(0),
+        price: parseInt(0),
+        fraction: parseFloat(0),
+        package: "",
+        totalPrice: parseInt(0),
+        customerName: customerName,
+        index: parseInt(9999),
+        paymentsresult: accountResult,
+        Clear: false,
+        });
 
+    
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/set_today_customer_name');
+    xhr.open('POST', '/clear?income='+sum);
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     xhr.send(JSON.stringify(data));
 }
 function showPrompt() {
  
-      test = prompt("還款/輸入-1為全部還款", 0);
+      input = prompt("還款/輸入-1為全部還款", 0);
       
       /*
       customerID = document.getElementById("customerID");
@@ -439,19 +436,11 @@ function showPrompt() {
 
 function submitTable(){
     
-
-   
-
-
-
-
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/accountDetail');
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     xhr.send(JSON.stringify(data));
 
- 
-    
     // 重整讀取下一個客戶的資料
     window.location.reload();window.location.reload();
 }
@@ -690,7 +679,6 @@ table.addEventListener("keydown", function(event) {
             
             table = document.getElementById("myTable");
             currentDate = document.getElementById("currentDate");
-            alert("當前號碼:currentDate: "+currentRow)
             if (table.rows[currentRow].cells[currentCol].innerText==""){
                 table.rows[currentRow].cells[currentCol].innerText = currentDate.innerText;
                 currentCol++;
@@ -796,16 +784,12 @@ table.addEventListener("keydown", function(event) {
                 price = table.rows[currentRow].cells[3].innerText
                 // 重量
                 weight = table.rows[currentRow].cells[2].innerText
-
-
                 // 分
                 multiple = table.rows[currentRow].cells[4].innerText
 
                 if (multiple =="1/2"){
                     multiple = 0.5
                 }
-
-
                 // 小籠 40
                 if (table.rows[currentRow].cells[5].innerText == "小"){
                     fish_case=40
@@ -879,6 +863,8 @@ table.addEventListener("keydown", function(event) {
                     totalPrice: parseInt(table.rows[currentRow].cells[6].innerHTML),
                     customerName: customerName,
                     index: parseInt(table.rows[currentRow].cells[7].innerHTML),
+                    paymentsresult: "",
+                    Clear: false,
                     });
 
                 const xhr = new XMLHttpRequest();

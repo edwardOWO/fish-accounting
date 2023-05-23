@@ -109,7 +109,9 @@ func init_db() {
 		Package TEXT,
 		TotalPrice INTEGER,
 		Print Bool,
-		DataIndex INTEGER
+		DataIndex INTEGER,
+		PaymentsResult Text,
+		Clear Bool
 	)`)
 	if err != nil {
 		fmt.Println(err)
@@ -226,6 +228,9 @@ func main() {
 	// 輸入帳目資料
 	router.POST("/accountDetail", handlePostFish)
 
+	// 輸入帳目資料
+	router.POST("/payment", payment)
+
 	// 取得個人帳目資料
 	router.GET("/accountDetail", getCustomAccount)
 
@@ -236,7 +241,7 @@ func main() {
 	router.GET("/get_all_account_customer", getAllAccountCustomer)
 
 	// 還帳目
-	router.GET("/clear", clear)
+	router.POST("/clear", clear)
 
 	// 選擇今天客戶
 	router.POST("/set_today_customer_name", set_today_customer_name)
@@ -262,6 +267,7 @@ func main() {
 }
 
 func clear(c *gin.Context) {
+	income := c.Query("income")
 
 	db, err := sql.Open("sqlite3", DB_Name)
 	if err != nil {
@@ -269,31 +275,74 @@ func clear(c *gin.Context) {
 	}
 	defer db.Close()
 
-	id := c.Query("id")
-	date := c.Query("date")
-	payment := c.Query("payment")
-	clear := c.Query("clear")
+	var fishes []Fish
+	if err := c.BindJSON(&fishes); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
 
 	layout := "2006-01-02"
 
-	t, err := time.Parse(layout, date)
+	t, err := time.Parse(layout, fishes[0].Date)
 	if err != nil {
 		fmt.Println("解析错误:", err)
 		return
 	}
 
-	if clear == "" {
-		// 部分還賬
-		_, err = db.Exec(`UPDATE today_customer SET Payments=? WHERE ID=? AND Date=?`, payment, id, t)
+	//@@@@
+	//rows, err := db.Query(`select TotalPrice from  accountDetail WHERE  ID=? and Date=? and Clear=false`, fishes[0].ID, t)
+	rows, err := db.Query(`select TotalPrice from  accountDetail WHERE  ID=? and Clear=false`, fishes[0].ID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	TotalArrears := 0
+	for rows.Next() {
+		data := 0
+		err := rows.Scan(&data)
 
 		if err != nil {
-			fmt.Print(err.Error())
+			log.Fatal(err)
 		}
-	} else {
-		// 完整還賬
-		_, err = db.Exec(`UPDATE today_customer SET Clear=? WHERE ID=?`, true, id)
 
+		TotalArrears += data
+	}
+
+	for _, detail := range fishes {
+
+		var count int
+		err := db.QueryRow("SELECT COUNT(*) FROM accountDetail WHERE DataIndex = ? AND Date = ?", detail.INDEX, t).Scan(&count)
 		if err != nil {
+			count = 1
+		}
+
+		result := "共:"
+		if income != "" {
+			result += strconv.Itoa(TotalArrears)
+			result += " 付: " + income
+		}
+
+		if count > 0 {
+
+			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ? WHERE DataIndex = ? AND Date = ?",
+				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, result, detail.INDEX, t)
+			if err != nil {
+
+				fmt.Print(err.Error())
+			}
+		} else {
+
+			_, err = db.Exec("INSERT INTO accountDetail (ID, CustomerName, Date, FishName, Weight, Price, Fraction, Package, TotalPrice, Print, DataIndex,PaymentsResult,Clear ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)",
+				detail.ID, detail.CustomerName, t, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.INDEX, result, detail.Clear)
+			if err != nil {
+				fmt.Print(err.Error())
+			}
+		}
+
+		_, err = db.Exec("UPDATE today_customer SET Setting = ? WHERE ID = ? AND Date = ?", true, detail.ID, t)
+		if err != nil {
+
 			fmt.Print(err.Error())
 		}
 
@@ -346,72 +395,58 @@ func handlePostFish(c *gin.Context) {
 
 		if count > 0 {
 			// 执行更新操作
-			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ? WHERE DataIndex = ? AND Date = ?",
-				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.INDEX, t)
+			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ? WHERE DataIndex = ? AND Date = ?",
+				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, detail.PaymentsResult, detail.INDEX, t)
 		} else {
 			// 执行插入操作
-			_, err = db.Exec("INSERT INTO accountDetail (ID, CustomerName, Date, FishName, Weight, Price, Fraction, Package, TotalPrice, Print, DataIndex) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-				detail.ID, detail.CustomerName, t, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.INDEX)
+			_, err = db.Exec("INSERT INTO accountDetail (ID, CustomerName, Date, FishName, Weight, Price, Fraction, Package, TotalPrice, Print, DataIndex,PaymentsResult,Clear ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)",
+				detail.ID, detail.CustomerName, t, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.INDEX, detail.PaymentsResult, detail.Clear)
+			if err != nil {
+				fmt.Print(err.Error())
+			}
 		}
 
-	}
-
-	// 更新今天的帳目,並且標記已經處理
-
-	// 加總使用者帳款,如果 Clear 欄位為1(true),表示已經還款故不再加總計算
-	rows, err := db.Query(`select TotalPrice from  accountDetail WHERE  ID=? and Date=?`, fishes[0].ID, t)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-
-	TotalArrears := 0
-	for rows.Next() {
-		data := 0
-		err := rows.Scan(&data)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		TotalArrears += data
-	}
-
-	query := "UPDATE today_customer SET Setting=?,TodayArrears=? WHERE date=? AND ID=?"
-	result, err := db.Exec(query, 0, TotalArrears, t, fishes[0].ID)
-	fmt.Print(result)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// 加總使用者帳款,如果 Clear 欄位為1(true),表示已經還款故不再加總計算
-	TotalArrears = 0
-	rows, err = db.Query(`select TodayArrears from  today_customer WHERE  ID=? and Clear=0`, fishes[0].ID)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		data := 0
-		err := rows.Scan(&data)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		TotalArrears += data
-	}
-
-	// 更新當前所有的欠款數到 Customer
-	query = "UPDATE Customer SET TotalArrears=? where id=?"
-	_, err = db.Exec(query, TotalArrears, fishes[0].ID)
-
-	if err != nil {
-		log.Fatal(err)
 	}
 
 	c.JSON(200, gin.H{"message": "Success"})
+}
+func payment(c *gin.Context) {
+
+	/*
+		query := "UPDATE today_customer SET Setting=?,TodayArrears=? WHERE date=? AND ID=?"
+		result, err := db.Exec(query, 0, TotalArrears, t, fishes[0].ID)
+		fmt.Print(result)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// 加總使用者帳款,如果 Clear 欄位為1(true),表示已經還款故不再加總計算
+		TotalArrears = 0
+		rows, err = db.Query(`select TodayArrears from  today_customer WHERE  ID=? and Clear=0`, fishes[0].ID)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			data := 0
+			err := rows.Scan(&data)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			TotalArrears += data
+		}
+
+		// 更新當前所有的欠款數到 Customer
+		query = "UPDATE Customer SET TotalArrears=? where id=?"
+		_, err = db.Exec(query, TotalArrears, fishes[0].ID)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+	*/
 }
 
 // 讀取所有客戶
@@ -495,13 +530,7 @@ func getCustomAccount(c *gin.Context) {
 
 		var getCustomAccountDetail []Fish
 
-		//rows, err := db.Query("SELECT * FROM accountDetail where ID =? ORDER BY Date", id)
-
-		sql := `SELECT ad.*, tc.PaymentsResult, tc.Clear
-			        FROM accountDetail ad
-			        JOIN today_customer tc ON ad.ID = tc.ID AND DATE(ad.Date) = DATE(tc.Date) where ad.ID=? ORDER BY ad.Date ASC`
-
-		rows, err := db.Query(sql, id)
+		rows, err := db.Query("SELECT * FROM accountDetail where ID =? ORDER BY Date", id)
 
 		if err != nil {
 			log.Fatal(err)
@@ -551,7 +580,6 @@ func getCustomAccount(c *gin.Context) {
 		}
 		defer rows.Close()
 
-		// 迭代查詢結果，並將結果加入 slice
 		for rows.Next() {
 			var fish Fish
 			print := false
