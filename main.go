@@ -19,16 +19,18 @@ import (
 )
 
 type Fish struct {
-	ID           int     `json:"id"`
-	Date         string  `json:"date"`
-	FishName     string  `json:"fishName"`
-	Weight       float32 `json:"weight"`
-	Price        int     `json:"price"`
-	Fraction     float32 `json:"fraction"`
-	Package      string  `json:"package"`
-	TotalPrice   int     `json:"totalPrice"`
-	CustomerName string  `json:"customerName"`
-	INDEX        int     `json:"index"`
+	ID             int     `json:"id"`
+	Date           string  `json:"date"`
+	FishName       string  `json:"fishName"`
+	Weight         float32 `json:"weight"`
+	Price          int     `json:"price"`
+	Fraction       float32 `json:"fraction"`
+	Package        string  `json:"package"`
+	TotalPrice     int     `json:"totalPrice"`
+	CustomerName   string  `json:"customerName"`
+	INDEX          int     `json:"index"`
+	PaymentsResult string  `json:"paymentsresult"`
+	Clear          bool    `json:"clear"`
 }
 
 type FishList struct {
@@ -148,11 +150,20 @@ func insertSelectCustomer(setting string, name string, id int, date time.Time, s
 			return fmt.Errorf("failed to insert customer: %v", err)
 		}
 	} else {
-		fmt.Print(PaymentsResult)
-		_, err = db.Exec(`UPDATE today_customer SET Setting = ?, Sort = ?,PaymentsResult = ? WHERE date = ? AND id = ?;`, setting, sort, PaymentsResult, date, id)
-		if err != nil {
-			return fmt.Errorf("failed to insert customer: %v", err)
+
+		if PaymentsResult != "" {
+			_, err = db.Exec(`UPDATE today_customer SET Setting = ?, Sort = ?,PaymentsResult = ? WHERE date = ? AND id = ?;`, setting, sort, PaymentsResult, date, id)
+			if err != nil {
+				return fmt.Errorf("failed to insert customer: %v", err)
+			}
+		} else {
+			// 當結帳訊息沒有資訊時,不更新結帳訊息
+			_, err = db.Exec(`UPDATE today_customer SET Setting = ?, Sort = ? WHERE date = ? AND id = ?;`, setting, sort, date, id)
+			if err != nil {
+				return fmt.Errorf("failed to insert customer: %v", err)
+			}
 		}
+
 	}
 
 	return nil
@@ -484,7 +495,14 @@ func getCustomAccount(c *gin.Context) {
 
 		var getCustomAccountDetail []Fish
 
-		rows, err := db.Query("SELECT * FROM accountDetail where ID =? ORDER BY Date", id)
+		//rows, err := db.Query("SELECT * FROM accountDetail where ID =? ORDER BY Date", id)
+
+		sql := `SELECT ad.*, tc.PaymentsResult, tc.Clear
+			        FROM accountDetail ad
+			        JOIN today_customer tc ON ad.ID = tc.ID AND DATE(ad.Date) = DATE(tc.Date) where ad.ID=? ORDER BY ad.Date ASC`
+
+		rows, err := db.Query(sql, id)
+
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -494,7 +512,7 @@ func getCustomAccount(c *gin.Context) {
 		for rows.Next() {
 			var fish Fish
 			print := false
-			err := rows.Scan(&fish.ID, &fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &print, &fish.INDEX)
+			err := rows.Scan(&fish.ID, &fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &print, &fish.INDEX, &fish.PaymentsResult, &fish.Clear)
 			if err != nil {
 				log.Fatal(err)
 			}

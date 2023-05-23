@@ -107,12 +107,14 @@ function LoadDetail(rowCount,datePart,userid){
     var current_count = document.getElementById("current_count");
     
     var sum=0
-    var index=0
+    // 紀錄讀取了多少行,補正黃標位置
+    var table_index=0
     var detail_table3 = document.getElementById("myTable");
     if (rowCount == 2) {
         // 修改成讀取全部數據
         //fetch("/accountDetail?id="+userid+"&date="+datePart)
         let predate=""
+        let result=""
         fetch("/accountDetail?id="+userid)
           .then(response => response.json())
           .then(data => {
@@ -124,9 +126,12 @@ function LoadDetail(rowCount,datePart,userid){
 
               // 當日期不相同時,中間插入前次結帳的訊息
               if (predate !=datePart && predate!=""){
-                TestInsert(predate,userid)
+                TestInsert(predate,result)
+                result=item.paymentsresult
                 predate=datePart
+                table_index++
               }else{
+                result=item.paymentsresult
                 predate=datePart
               }
 
@@ -157,8 +162,14 @@ function LoadDetail(rowCount,datePart,userid){
               cell.innerText = item.index;
               data_index= parseInt(item.index)
               sum+= parseInt(item.totalPrice)
+              table_index++
             
             });
+
+            if (result!=""){
+                table_index++
+                TestInsert(predate,result)
+            }
   
             current_count.innerHTML=sum
             document.getElementById('myTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr')[1].getElementsByTagName('td')[0].focus()
@@ -171,19 +182,28 @@ function LoadDetail(rowCount,datePart,userid){
                 cell.textContent = "";
             });
             // 讀取完數據後再定位
-            currentRow = 2;
+            currentRow = 0;
             currentCol=0;
+            currentRow+=table_index;
+            currentRow++;
+
+            alert("table_index: "+table_index);
 
             table = detail_table3.querySelector("tbody");
+            
+
+            // 新增輸入列
+            var newRow = table.insertRow(-1);
+            for (var i = 0; i < table.rows[0].cells.length; i++) {
+                var cell = newRow.insertCell(i);
+                cell.contentEditable = true;
+            }
             table.rows[currentRow].cells[currentCol].focus();
+            currentRow++
 
             // 測試打印共帳資訊
             //TestInsert(datePart)
 
-            return 87;
-          })
-          .then((a) => {
-            alert(a);
           })
           .catch(error => {
             firstRow = table.querySelector("tr").style.display="";
@@ -289,14 +309,14 @@ testButton2.onclick = function(){
     cell.contentEditable = true;
 }
 let point=null
-function TestInsert(datePart,userid){
+function TestInsert(datePart,result){
 
     var newRow = table.insertRow(-1);
     var totalColumns = table.rows[0].cells.length;
     var cell = newRow.insertCell(0);
     cell.colSpan = 7;
     cell.contentEditable = true;
-    cell.innerText = "共:"+document.getElementById("current_count").innerText;
+    cell.innerText = result;
 
     point =cell.innerText;
 
@@ -622,11 +642,12 @@ table.addEventListener("keydown", function(event) {
         }
         break;
         case 38: // up arrow
+        table = document.getElementById('myTable');
         if (currentRow > 1) {
             currentRow--;
             cellCount = table.rows[currentRow];
             if (cellCount.querySelectorAll('td').length==2){
-                table.rows[currentRow].cells[1].focus();
+                table.rows[currentRow].cells[0].focus();
             }else{
                 table.rows[currentRow].cells[currentCol].focus();
             }
@@ -640,6 +661,7 @@ table.addEventListener("keydown", function(event) {
         }
         break;
         case 40: // down arrow
+        table = document.getElementById('myTable');
         if (currentRow < table.rows.length - 1) {
 
             currentRow++;
@@ -668,7 +690,7 @@ table.addEventListener("keydown", function(event) {
             
             table = document.getElementById("myTable");
             currentDate = document.getElementById("currentDate");
-            
+            alert("當前號碼:currentDate: "+currentRow)
             if (table.rows[currentRow].cells[currentCol].innerText==""){
                 table.rows[currentRow].cells[currentCol].innerText = currentDate.innerText;
                 currentCol++;
@@ -814,11 +836,12 @@ table.addEventListener("keydown", function(event) {
 
 
                 // 索引 +1
+                data_index++;
                 if (table.rows[currentRow].cells[7].innerHTML=="") {
                     table.rows[currentRow].cells[7].innerHTML = data_index;
                 }
 
-                data_index++;
+                
 
                 // 每次進行計算後累積當前結果
                 sum=0
@@ -883,6 +906,7 @@ table.addEventListener("keydown", function(event) {
                 cell.contentEditable = true;
                 }
                 currentRow++;
+        
 
                 // 移動到下一列的第一格
                 table.rows[currentRow].cells[0].focus();
