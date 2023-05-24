@@ -29,6 +29,7 @@ type Fish struct {
 	TotalPrice     int     `json:"totalPrice"`
 	CustomerName   string  `json:"customerName"`
 	INDEX          int     `json:"index"`
+	PaymentAmount  int     `json:"paymentamount"`
 	PaymentsResult string  `json:"paymentsresult"`
 	Clear          bool    `json:"clear"`
 }
@@ -111,6 +112,7 @@ func init_db() {
 		Print Bool,
 		DataIndex INTEGER,
 		PaymentsResult Text,
+		PaymentAmount INTEGER,
 		Clear Bool
 	)`)
 	if err != nil {
@@ -267,7 +269,6 @@ func main() {
 }
 
 func clear(c *gin.Context) {
-	income := c.Query("income")
 
 	db, err := sql.Open("sqlite3", DB_Name)
 	if err != nil {
@@ -289,25 +290,7 @@ func clear(c *gin.Context) {
 		return
 	}
 
-	//@@@@
-	//rows, err := db.Query(`select TotalPrice from  accountDetail WHERE  ID=? and Date=? and Clear=false`, fishes[0].ID, t)
-	rows, err := db.Query(`select TotalPrice from  accountDetail WHERE  ID=? and Clear=false`, fishes[0].ID)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-
-	TotalArrears := 0
-	for rows.Next() {
-		data := 0
-		err := rows.Scan(&data)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		TotalArrears += data
-	}
+	//TotalArrears -= fishes[0].PaymentAmount
 
 	for _, detail := range fishes {
 
@@ -317,35 +300,72 @@ func clear(c *gin.Context) {
 			count = 1
 		}
 
-		result := "共:"
-		if income != "" {
-			result += strconv.Itoa(TotalArrears)
-			result += " 付: " + income
-		}
-
 		if count > 0 {
 
-			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ? WHERE DataIndex = ? AND Date = ?",
-				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, result, detail.INDEX, t)
+			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ?,PaymentAmount= ? WHERE DataIndex = ? AND Date = ?",
+				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, "", fishes[0].PaymentAmount, detail.INDEX, t)
 			if err != nil {
 
 				fmt.Print(err.Error())
 			}
 		} else {
 
-			_, err = db.Exec("INSERT INTO accountDetail (ID, CustomerName, Date, FishName, Weight, Price, Fraction, Package, TotalPrice, Print, DataIndex,PaymentsResult,Clear ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)",
-				detail.ID, detail.CustomerName, t, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.INDEX, result, detail.Clear)
+			_, err = db.Exec("INSERT INTO accountDetail (ID, CustomerName, Date, FishName, Weight, Price, Fraction, Package, TotalPrice, Print, DataIndex,PaymentsResult,Clear,PaymentAmount ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)",
+				detail.ID, detail.CustomerName, t, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.INDEX, "", detail.Clear, fishes[0].PaymentAmount)
 			if err != nil {
 				fmt.Print(err.Error())
 			}
 		}
 
-		_, err = db.Exec("UPDATE today_customer SET Setting = ? WHERE ID = ? AND Date = ?", true, detail.ID, t)
+	}
+
+	//rows, err := db.Query(`select TotalPrice from  accountDetail WHERE  ID=? and Date=? and Clear=false`, fishes[0].ID, t)
+	rows, err := db.Query(`select TotalPrice,PaymentAmount from  accountDetail WHERE  ID=? and Clear=false`, fishes[0].ID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	TotalArrears := 0
+	Imcome := 0
+	for rows.Next() {
+		TotalPrice := 0
+		PaymentAmount := 0
+		err := rows.Scan(&TotalPrice, &PaymentAmount)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		TotalArrears += TotalPrice
+		Imcome += PaymentAmount
+	}
+
+	result := "共="
+	result += strconv.Itoa(TotalArrears)
+	if fishes[0].PaymentAmount != 0 {
+		result += "| "
+		result += t.Format("01/02")
+		result += " 入=" + strconv.Itoa(fishes[0].PaymentAmount) + " 剩=" + strconv.Itoa(TotalArrears-Imcome)
+	}
+
+	_, err = db.Exec("UPDATE accountDetail SET PaymentsResult= ? WHERE DataIndex = ? AND Date = ?", result, fishes[0].INDEX, t)
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	if TotalArrears-Imcome == 0 {
+		_, err = db.Exec("UPDATE accountDetail SET Clear = ? WHERE ID = ?", true, fishes[0].ID)
 		if err != nil {
 
 			fmt.Print(err.Error())
 		}
+	}
 
+	_, err = db.Exec("UPDATE today_customer SET Setting = ? WHERE ID = ? AND Date = ?", true, fishes[0].ID, t)
+	if err != nil {
+
+		fmt.Print(err.Error())
 	}
 
 }
@@ -395,12 +415,12 @@ func handlePostFish(c *gin.Context) {
 
 		if count > 0 {
 			// 执行更新操作
-			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ? WHERE DataIndex = ? AND Date = ?",
-				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, detail.PaymentsResult, detail.INDEX, t)
+			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ? ,PaymentAmount = ? WHERE DataIndex = ? AND Date = ?",
+				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, detail.PaymentsResult, detail.PaymentAmount, detail.INDEX, t)
 		} else {
 			// 执行插入操作
-			_, err = db.Exec("INSERT INTO accountDetail (ID, CustomerName, Date, FishName, Weight, Price, Fraction, Package, TotalPrice, Print, DataIndex,PaymentsResult,Clear ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)",
-				detail.ID, detail.CustomerName, t, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.INDEX, detail.PaymentsResult, detail.Clear)
+			_, err = db.Exec("INSERT INTO accountDetail (ID, CustomerName, Date, FishName, Weight, Price, Fraction, Package, TotalPrice, Print, DataIndex,PaymentsResult,Clear, PaymentAmount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,0)",
+				detail.ID, detail.CustomerName, t, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.INDEX, detail.PaymentsResult, detail.Clear, detail.PaymentAmount)
 			if err != nil {
 				fmt.Print(err.Error())
 			}
@@ -530,7 +550,7 @@ func getCustomAccount(c *gin.Context) {
 
 		var getCustomAccountDetail []Fish
 
-		rows, err := db.Query("SELECT * FROM accountDetail where ID =? ORDER BY Date", id)
+		rows, err := db.Query("SELECT * FROM accountDetail where ID =1 ORDER BY Date,DataIndex;", id)
 
 		if err != nil {
 			log.Fatal(err)
@@ -541,7 +561,7 @@ func getCustomAccount(c *gin.Context) {
 		for rows.Next() {
 			var fish Fish
 			print := false
-			err := rows.Scan(&fish.ID, &fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &print, &fish.INDEX, &fish.PaymentsResult, &fish.Clear)
+			err := rows.Scan(&fish.ID, &fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &print, &fish.INDEX, &fish.PaymentsResult, &fish.PaymentAmount, &fish.Clear)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -583,7 +603,7 @@ func getCustomAccount(c *gin.Context) {
 		for rows.Next() {
 			var fish Fish
 			print := false
-			err := rows.Scan(&fish.ID, &fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &print, &fish.INDEX)
+			err := rows.Scan(&fish.ID, &fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &print, &fish.INDEX, &fish.PaymentAmount)
 			if err != nil {
 				log.Fatal(err)
 			}

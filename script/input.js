@@ -122,7 +122,7 @@ function LoadDetail(rowCount,datePart,userid){
               var dateObject = new Date(item.date);
               var datePart = dateObject.toISOString().split('T')[0];
               if (item.index==9999){
-                TestInsert(datePart,item.paymentsresult)
+                InsertCheckout(datePart,item.paymentsresult)
               }else{
                 var newRow = detail_table3.insertRow(-1);
                 var cell = newRow.insertCell();
@@ -150,6 +150,8 @@ function LoadDetail(rowCount,datePart,userid){
                 cell.contentEditable = true;
                 cell.innerText = item.index;
                 data_index= parseInt(item.index)
+
+                
               }
               table_index++
 
@@ -157,7 +159,7 @@ function LoadDetail(rowCount,datePart,userid){
 
             if (result!=""){
                 table_index++
-                TestInsert(predate,result)
+                InsertCheckout(predate,result)
             }
   
             current_count.innerHTML=sum
@@ -294,13 +296,13 @@ testButton2.onclick = function(){
     cell.contentEditable = true;
 }
 let point=null
-function TestInsert(datePart,result){
+function InsertCheckout(datePart,result){
 
     var newRow = table.insertRow(-1);
     var totalColumns = table.rows[0].cells.length;
     var cell = newRow.insertCell(0);
     cell.colSpan = 7;
-    cell.contentEditable = true;
+    cell.contentEditable = false;
     cell.innerText = result;
 
     point =cell.innerText;
@@ -368,6 +370,7 @@ testButton.onclick = function(){
         totalPrice: parseInt(0),
         customerName: customerName,
         index: parseInt(9999),
+        paymentamount: parseInt(sum),
         paymentsresult: accountResult,
         Clear: false,
         });
@@ -377,6 +380,8 @@ testButton.onclick = function(){
     xhr.open('POST', '/clear?income='+sum);
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     xhr.send(JSON.stringify(data));
+
+    window.location.reload();
 }
 function showPrompt() {
  
@@ -442,7 +447,7 @@ function submitTable(){
     xhr.send(JSON.stringify(data));
 
     // 重整讀取下一個客戶的資料
-    window.location.reload();window.location.reload();
+    window.location.reload();
 }
 function submitTable2(){
     checkDate=false
@@ -525,7 +530,7 @@ function submitTable2(){
     var customer = document.getElementById("customer");
     
     // 重整讀取下一個客戶的資料
-    window.location.reload();window.location.reload();
+    window.location.reload();
 }
 
 myButton.onclick = function() {
@@ -864,6 +869,7 @@ table.addEventListener("keydown", function(event) {
                     customerName: customerName,
                     index: parseInt(table.rows[currentRow].cells[7].innerHTML),
                     paymentsresult: "",
+                    paymentamount: parseInt(0),
                     Clear: false,
                     });
 
