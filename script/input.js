@@ -307,7 +307,7 @@ function InsertCheckout(datePart,result){
 
     point =cell.innerText;
 
-    cell.style.textAlign = "mid";
+    cell.style.textAlign = "left";
     var cell = newRow.insertCell(0);
     cell.innerText=datePart;
     cell.colSpan = 1;
@@ -661,7 +661,7 @@ table.addEventListener("keydown", function(event) {
             currentRow++;
             cellCount = table.rows[currentRow];
             if (cellCount.querySelectorAll('td').length==2){
-                table.rows[currentRow].cells[1].focus();
+                table.rows[currentRow].cells[0].focus();
             }else{
                 table.rows[currentRow].cells[currentCol].focus();
             }
