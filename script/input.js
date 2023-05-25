@@ -100,6 +100,11 @@ function loadPage(){
 
 };
 
+function scrollToBottom() {
+    window.scrollTo(0, document.body.scrollHeight);
+}
+  
+
 
 // 讀取帳目詳細資料
 function LoadDetail(rowCount,datePart,userid){
@@ -903,6 +908,7 @@ table.addEventListener("keydown", function(event) {
                 // 移動到下一列的第一格
                 table.rows[currentRow].cells[0].focus();
                 currentCol=0
+                scrollToBottom();
             }
 
             break;
