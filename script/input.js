@@ -82,10 +82,6 @@ function loadPage(){
 
     })
     .catch(error => console.error()); // 若發生錯誤則顯示錯誤訊息
-
-
-
-
     })
     .catch(error => {
         console.error(error);
@@ -93,11 +89,6 @@ function loadPage(){
         alert("所有客戶已經處理完成,轉跳回主頁面")
         window.location= "http://127.0.0.1:8080/login";
     });
-
-
-    
-
-
 };
 
 function scrollToBottom() {
@@ -126,7 +117,7 @@ function LoadDetail(rowCount,datePart,userid){
             data.forEach(item => {
               var dateObject = new Date(item.date);
               var datePart = dateObject.toISOString().split('T')[0];
-              if (item.index==9999){
+              if (item.paymentsresult!=""){
                 InsertCheckout(datePart,item.paymentsresult)
               }else{
                 var newRow = detail_table3.insertRow(-1);
@@ -155,8 +146,6 @@ function LoadDetail(rowCount,datePart,userid){
                 cell.contentEditable = true;
                 cell.innerText = item.index;
                 data_index= parseInt(item.index)
-
-                
               }
               table_index++
 
@@ -278,6 +267,94 @@ window.onload = function() {
 
 };
 
+
+// 下一位使用者
+NextButton.onclick = function(){
+    
+
+    customerID = document.getElementById("customerID");
+    customer = document.getElementById("customer");
+    currentDate = document.getElementById("currentDate");
+
+    var timestamp = Date.parse(currentDate.innerText);
+    var date = new Date(timestamp);
+
+
+    const data = [];
+    var customerID = document.getElementById("customerID");
+    id = customerID.innerText;
+    var customer = document.getElementById("customer");
+    customerName = customer.innerText;
+
+    data.push({
+        id: parseInt(id),
+        date: currentDate.innerHTML,
+        fishName: "",
+        weight: parseFloat(0),
+        price: parseInt(0),
+        fraction: parseFloat(0),
+        package: "",
+        totalPrice: parseInt(0),
+        customerName: customerName,
+        index: parseInt(9999),
+        paymentamount: parseInt(0),
+        paymentsresult: "",
+        Clear: false,
+        });
+
+    
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/next_customer')
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    xhr.send(JSON.stringify(data));
+
+    window.location.reload();
+  
+}
+
+PrintAndClose.onclick = function(){
+    
+
+    customerID = document.getElementById("customerID");
+    customer = document.getElementById("customer");
+    currentDate = document.getElementById("currentDate");
+
+    var timestamp = Date.parse(currentDate.innerText);
+    var date = new Date(timestamp);
+
+
+    const data = [];
+    var customerID = document.getElementById("customerID");
+    id = customerID.innerText;
+    var customer = document.getElementById("customer");
+    customerName = customer.innerText;
+
+    data.push({
+        id: parseInt(id),
+        date: currentDate.innerHTML,
+        fishName: "",
+        weight: parseFloat(0),
+        price: parseInt(0),
+        fraction: parseFloat(0),
+        package: "",
+        totalPrice: parseInt(0),
+        customerName: customerName,
+        index: parseInt(9999),
+        paymentamount: parseInt(0),
+        paymentsresult: "",
+        Clear: false,
+        });
+
+    
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/PrintAndClose')
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    xhr.send(JSON.stringify(data));
+
+    window.location.reload();
+  
+}
+
 testButton3.onclick = function(){
     // 新增下一列,繼續進行運作
     var newRow = table.insertRow(-1);
@@ -374,7 +451,7 @@ testButton.onclick = function(){
         package: "",
         totalPrice: parseInt(0),
         customerName: customerName,
-        index: parseInt(9999),
+        index: parseInt(data_index),
         paymentamount: parseInt(sum),
         paymentsresult: accountResult,
         Clear: false,
@@ -385,7 +462,7 @@ testButton.onclick = function(){
     xhr.open('POST', '/clear?income='+sum);
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     xhr.send(JSON.stringify(data));
-
+    data_index++;
     window.location.reload();
 }
 function showPrompt() {
@@ -537,12 +614,6 @@ function submitTable2(){
     // 重整讀取下一個客戶的資料
     window.location.reload();
 }
-
-myButton.onclick = function() {
-    submitTable
-};
-
-
 
 
 function checkFishColor(number) {
