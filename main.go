@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -210,7 +211,7 @@ func main() {
 	})
 
 	// 選擇列印頁面
-	//router.GET("/", generatePrintHTML)
+	router.GET("/print", generatePrintHTML)
 
 	// 產生列印檔案
 	router.POST("/print", generatePrintDetail)
@@ -1098,7 +1099,7 @@ func generatePrintHTML(c *gin.Context) {
 
 	fix_print()
 	// 讀取 txt 檔案內容
-	content, err := ioutil.ReadFile("data.txt")
+	content, err := ioutil.ReadFile("fish.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -1122,6 +1123,8 @@ func generatePrintHTML(c *gin.Context) {
 
 func generatePrintDetail(c *gin.Context) {
 
+	os.Truncate("fish.txt", 0)
+
 	db, err := sql.Open("sqlite3", DB_Name)
 	if err != nil {
 		fmt.Println(err)
@@ -1134,22 +1137,163 @@ func generatePrintDetail(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
+	id := 0
 	for _, customer := range customers {
-		rows, err := db.Query("SELECT ID FROM accountDetail WHERE ID=? AND Print=false", customer.ID)
+
+		rows2, err2 := db.Query("SELECT TotalArrears  from Customer where ID=?", customer.ID)
+		id = customer.ID
+		if err2 != nil {
+			log.Fatal(err)
+		}
+		defer rows2.Close()
+
+		preCount := 0
+		for rows2.Next() {
+			err = rows2.Scan(&preCount)
+		}
+
+		rows, err := db.Query("SELECT CustomerName,FishName,Date,Price,Weight,Fraction,Package,TotalPrice,PaymentsResult,PaymentAmount,Print  FROM accountDetail WHERE ID=? AND clear=false", customer.ID)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer rows.Close()
 		var fish Fish
 
+		index := 0
+		TotalArrears := 0
+		Income := 0
 		for rows.Next() {
-			err = rows.Scan(&fish.ID)
-			fmt.Print(fish.ID)
+			print := false
+			err = rows.Scan(&fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &fish.PaymentsResult, &fish.PaymentAmount, &print)
+			Result := ""
 
+			TotalArrears += fish.TotalPrice
+			Income += fish.PaymentAmount
+
+			if index == 0 {
+				Result += fish.CustomerName
+				WriteToFile("fish.txt", Result)
+				WriteToFile("fish.txt", "    前帳: "+strconv.Itoa(preCount))
+				Result = ""
+			}
+			index++
+
+			if fish.PaymentsResult != "" {
+
+				extractedData, _ := ExtractData(fish.PaymentsResult)
+				Result += extractedData
+				WriteToFile("fish.txt", Result)
+			} else {
+
+				// 打印未印的表單
+				if print == false {
+					Result += fish.FishName
+					Result += " "
+
+					date, err := time.Parse(time.RFC3339, fish.Date)
+					if err != nil {
+						fmt.Println("日期解析失败:", err)
+						return
+					}
+
+					// 格式化日期为 MM/DD
+					format := "01/02"
+					formattedDate := date.Format(format)
+
+					Result += formattedDate
+					Result += " "
+					Result += strconv.Itoa(fish.Price)
+					Result += " "
+					s := strconv.FormatFloat(float64(fish.Weight), 'f', -1, 32)
+					Result += s
+					Result += " "
+					s = strconv.FormatFloat(float64(fish.Fraction), 'f', -1, 32)
+					Result += s
+					Result += " "
+					Result += fish.Package
+					Result += " "
+					Result += strconv.Itoa(fish.TotalPrice)
+					Result += " "
+					Result += fish.PaymentsResult
+					WriteToFile("fish.txt", Result)
+				}
+			}
+
+		}
+		WriteToFile("fish.txt", "勝: "+strconv.Itoa(TotalArrears-Income))
+		_, err = db.Exec("UPDATE Customer SET TotalArrears = ? WHERE ID = ?", strconv.Itoa(TotalArrears-Income), id)
+		if err != nil {
+
+			fmt.Print(err.Error())
+		}
+
+		if TotalArrears-Income == 0 {
+
+			// 將單子設定成已經結帳
+			_, err = db.Exec("UPDATE accountDetail SET Clear = ?,Print = ? WHERE ID = ?", true, true, id)
+			if err != nil {
+
+				fmt.Print(err.Error())
+			}
+		} else {
+			_, err = db.Exec("UPDATE accountDetail SET Print = ? WHERE ID = ?", true, id)
+			if err != nil {
+
+				fmt.Print(err.Error())
+			}
+		}
+
+		now := time.Now().UTC().Truncate(24 * time.Hour)
+
+		targetTime := time.Date(2023, time.May, 3, 0, 0, 0, 0, time.UTC)
+		targetDateTime := time.Date(now.Year(), now.Month(), now.Day(), targetTime.Hour(), targetTime.Minute(), targetTime.Second(), targetTime.Nanosecond(), time.UTC)
+		formattedTime := targetDateTime.Format("2006-01-02 15:04:05-07:00")
+
+		if err != nil {
+			fmt.Println("解析错误:", err)
+			return
+		}
+
+		detail := Fish{}
+		detail.ID = id
+		detail.CustomerName = ""
+		detail.Date = formattedTime
+		detail.FishName = ""
+		detail.Fraction = float32(0)
+		detail.INDEX = 0
+		detail.Package = ""
+		detail.PaymentAmount = 0
+		detail.PaymentsResult = "共:" + strconv.Itoa(TotalArrears-Income)
+		detail.Price = 0
+		detail.TotalPrice = 0
+
+		db.Exec("INSERT INTO accountDetail (ID, CustomerName, Date, FishName, Weight, Price, Fraction, Package, TotalPrice, Print, DataIndex,PaymentsResult,Clear,PaymentAmount ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)",
+			detail.ID, detail.CustomerName, detail.Date, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, true, detail.INDEX, detail.PaymentsResult, detail.Clear, detail.PaymentAmount)
+		if err != nil {
+			fmt.Print(err.Error())
 		}
 
 	}
 
 	fmt.Println(customers)
 	c.JSON(200, gin.H{"message": "Success"})
+}
+func ExtractData(input string) (string, error) {
+
+	pattern := `\|(.*)`
+
+	regExp, err := regexp.Compile(pattern)
+	if err != nil {
+		return "", fmt.Errorf("正则表达式编译错误: %s", err)
+	}
+
+	match := regExp.FindStringSubmatch(input)
+
+	if len(match) > 1 {
+
+		extractedData := match[1]
+		return extractedData, nil
+	} else {
+		return "", fmt.Errorf("未找到匹配的内容")
+	}
 }
