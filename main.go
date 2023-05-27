@@ -1248,6 +1248,7 @@ func generatePrintDetail(c *gin.Context) {
 		detail.PaymentsResult = "共:" + strconv.Itoa(TotalArrears-Income)
 		detail.Price = 0
 		detail.TotalPrice = 0
+		detail.Clear = true
 
 		db.Exec("INSERT INTO accountDetail (ID, CustomerName, Date, FishName, Weight, Price, Fraction, Package, TotalPrice, Print, DataIndex,PaymentsResult,Clear,PaymentAmount ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)",
 			detail.ID, detail.CustomerName, detail.Date, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, true, detail.INDEX, detail.PaymentsResult, detail.Clear, detail.PaymentAmount)
