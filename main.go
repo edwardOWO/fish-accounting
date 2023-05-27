@@ -358,7 +358,13 @@ func clear(c *gin.Context) {
 	result := ""
 	if fishes[0].PaymentAmount != 0 {
 		result += t.Format("01/02")
-		result += " 入=" + strconv.Itoa(fishes[0].PaymentAmount) + " 剩=" + strconv.Itoa(TotalArrears-Imcome)
+
+		if TotalArrears-Imcome >= 0 {
+			result += " 入=" + strconv.Itoa(fishes[0].PaymentAmount) + " 欠=" + strconv.Itoa(TotalArrears-Imcome)
+		} else {
+			result += " 入=" + strconv.Itoa(fishes[0].PaymentAmount) + " 剩=" + strconv.Itoa(TotalArrears-Imcome)
+		}
+
 	}
 
 	_, err = db.Exec("UPDATE accountDetail SET PaymentsResult= ? WHERE DataIndex = ? AND Date = ?", result, fishes[0].INDEX, t)
@@ -1202,7 +1208,7 @@ func generatePrintDetail(c *gin.Context) {
 			}
 
 		}
-		WriteToFile("fish.txt", "勝: "+strconv.Itoa(TotalArrears-Income))
+		WriteToFile("fish.txt", "盛: "+strconv.Itoa(TotalArrears-Income))
 		_, err = db.Exec("UPDATE Customer SET TotalArrears = ? WHERE ID = ?", strconv.Itoa(TotalArrears-Income), id)
 		if err != nil {
 
@@ -1242,7 +1248,7 @@ func generatePrintDetail(c *gin.Context) {
 		detail.Date = formattedTime
 		detail.FishName = ""
 		detail.Fraction = float32(0)
-		detail.INDEX = 0
+		detail.INDEX = 999
 		detail.Package = ""
 		detail.PaymentAmount = 0
 		detail.PaymentsResult = "共:" + strconv.Itoa(TotalArrears-Income)
