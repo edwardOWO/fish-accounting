@@ -1,9 +1,27 @@
+
+	<!DOCTYPE html>
+<html>
+<head>
+  <title>列印純文字內容</title>
+  <style>
+    .text-content {
+      white-space: pre;
+      font-size: 15px;
+    }
+  </style>
+  </style>
+</head>
+<body>
+	
+<pre class="text-content">
+<h2>
 test
-    前帳: 0
-05/01 熟卷 10 100 1 0 1065
-05/01 草魚 10 100 1 0 1065
-05/01 草魚 10 100 1 0 1065
-05/01 草魚 116.7 1001 12 0 1485972
-05/01 螺 10 30 1 0 323
-05/01 草魚 10 10 1 0 111
-盛: 1489601
+</h2>
+前帳: 2929683
+</pre>
+<h4>盛: 2929683</h4>
+<pre>-----------------------------------------------</pre>
+
+	<button onclick="window.print()">列印文字</button>
+	</body>
+	</html>

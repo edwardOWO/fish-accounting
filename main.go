@@ -689,7 +689,7 @@ func getCustomAccount(c *gin.Context) {
 
 		var getCustomAccountDetail []Fish
 
-		rows, err := db.Query("SELECT * FROM accountDetail where ID =1 ORDER BY Date,DataIndex;", id)
+		rows, err := db.Query("SELECT * FROM accountDetail where ID =? ORDER BY Date,DataIndex;", id)
 
 		if err != nil {
 			log.Fatal(err)
@@ -1086,13 +1086,13 @@ func fix_print() {
 
 func generatePrintHTML(c *gin.Context) {
 
-	fix_print()
+	os.Truncate("templates/print.html", 0)
 	// 讀取 txt 檔案內容
 	content, err := ioutil.ReadFile("fish.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	WriteToFile("templates/print.html", string(content))
 	// 定義模板
 	tmpl := template.Must(template.ParseFiles("templates/print.html"))
 
@@ -1113,6 +1113,23 @@ func generatePrintHTML(c *gin.Context) {
 func generatePrintDetail(c *gin.Context) {
 
 	os.Truncate("fish.txt", 0)
+
+	html := `
+	<!DOCTYPE html>
+<html>
+<head>
+  <title>列印純文字內容</title>
+  <style>
+    .text-content {
+      white-space: pre;
+      font-size: 15px;
+    }
+  </style>
+  </style>
+</head>
+<body>
+	`
+	WriteToFile("fish.txt", html)
 
 	db, err := sql.Open("sqlite3", DB_Name)
 	if err != nil {
@@ -1156,16 +1173,17 @@ func generatePrintDetail(c *gin.Context) {
 		for rows.Next() {
 			print := false
 			err = rows.Scan(&fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &fish.PaymentsResult, &fish.PaymentAmount, &print)
-			Result := ""
 
 			TotalArrears += fish.TotalPrice
 			Income += fish.PaymentAmount
 
 			if index == 0 {
-				Result += fish.CustomerName
-				WriteToFile("fish.txt", Result)
+				WriteToFile("fish.txt", "<h2>")
+				WriteToFile("fish.txt", fish.CustomerName)
+				WriteToFile("fish.txt", "</h2>")
+				WriteToFile("fish.txt", "<pre class=\"text-content\">")
+
 				WriteToFile("fish.txt", "前帳: "+strconv.Itoa(preCount))
-				Result = ""
 			}
 			index++
 
@@ -1185,25 +1203,16 @@ func generatePrintDetail(c *gin.Context) {
 					format := "01/02"
 					formattedDate := date.Format(format)
 
-					Result += formattedDate
-					Result += " "
-					Result += fish.FishName
-					Result += " "
-					s := strconv.FormatFloat(float64(fish.Weight), 'f', -1, 32)
-					Result += s
-					Result += " "
-					Result += strconv.Itoa(fish.Price)
-					Result += " "
-					s = strconv.FormatFloat(float64(fish.Fraction), 'f', -1, 32)
-					Result += s
-					Result += " "
-					Result += strconv.Itoa(fish.TotalPrice)
-					WriteToFile("fish.txt", Result)
+					paddedStr := fmt.Sprintf("%-5s %-3s %-6s %-4s %-3s %-4s", formattedDate, fish.FishName, strconv.FormatFloat(float64(fish.Weight), 'f', -1, 32), strconv.Itoa(fish.Price), strconv.FormatFloat(float64(fish.Fraction), 'f', -1, 32), strconv.Itoa(fish.TotalPrice))
+					WriteToFile("fish.txt", paddedStr)
 				}
 			}
 
 		}
-		WriteToFile("fish.txt", "盛: "+strconv.Itoa(TotalArrears-Income))
+		WriteToFile("fish.txt", "</pre>")
+		WriteToFile("fish.txt", "<h4>盛: "+strconv.Itoa(TotalArrears-Income)+"</h4>")
+		WriteToFile("fish.txt", "<pre>-----------------------------------------------</pre>")
+
 		_, err = db.Exec("UPDATE Customer SET TotalArrears = ? WHERE ID = ?", strconv.Itoa(TotalArrears-Income), id)
 		if err != nil {
 
@@ -1258,6 +1267,12 @@ func generatePrintDetail(c *gin.Context) {
 		}
 
 	}
+
+	html_end := `
+	<button onclick="window.print()">列印文字</button>
+	</body>
+	</html>`
+	WriteToFile("fish.txt", html_end)
 
 	fmt.Println(customers)
 	c.JSON(200, gin.H{"message": "Success"})
