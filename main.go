@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -356,16 +355,8 @@ func clear(c *gin.Context) {
 		Imcome += PaymentAmount
 	}
 
-	//_, err = db.Exec("UPDATE Customer SET TotalArrears = ? WHERE ID = ?", TotalArrears, fishes[0].ID)
-	//if err != nil {
-	//
-	//	fmt.Print(err.Error())
-	//}
-
-	result := "共="
-	result += strconv.Itoa(TotalArrears - Imcome + fishes[0].PaymentAmount)
+	result := ""
 	if fishes[0].PaymentAmount != 0 {
-		result += "| "
 		result += t.Format("01/02")
 		result += " 入=" + strconv.Itoa(fishes[0].PaymentAmount) + " 剩=" + strconv.Itoa(TotalArrears-Imcome)
 	}
@@ -373,14 +364,6 @@ func clear(c *gin.Context) {
 	_, err = db.Exec("UPDATE accountDetail SET PaymentsResult= ? WHERE DataIndex = ? AND Date = ?", result, fishes[0].INDEX, t)
 	if err != nil {
 		fmt.Print(err.Error())
-	}
-
-	if TotalArrears-Imcome == 0 {
-		_, err = db.Exec("UPDATE accountDetail SET Clear = ? WHERE ID = ?", true, fishes[0].ID)
-		if err != nil {
-
-			fmt.Print(err.Error())
-		}
 	}
 
 }
@@ -1180,15 +1163,12 @@ func generatePrintDetail(c *gin.Context) {
 
 			if fish.PaymentsResult != "" {
 
-				extractedData, _ := ExtractData(fish.PaymentsResult)
-				Result += extractedData
+				Result += fish.PaymentsResult
 				WriteToFile("fish.txt", Result)
 			} else {
 
 				// 打印未印的表單
 				if print == false {
-					Result += fish.FishName
-					Result += " "
 
 					date, err := time.Parse(time.RFC3339, fish.Date)
 					if err != nil {
@@ -1201,6 +1181,8 @@ func generatePrintDetail(c *gin.Context) {
 					formattedDate := date.Format(format)
 
 					Result += formattedDate
+					Result += " "
+					Result += fish.FishName
 					Result += " "
 					Result += strconv.Itoa(fish.Price)
 					Result += " "
@@ -1243,7 +1225,7 @@ func generatePrintDetail(c *gin.Context) {
 			}
 		}
 
-		now := time.Now().UTC().Truncate(24 * time.Hour)
+		now := customer.Date
 
 		targetTime := time.Date(2023, time.May, 3, 0, 0, 0, 0, time.UTC)
 		targetDateTime := time.Date(now.Year(), now.Month(), now.Day(), targetTime.Hour(), targetTime.Minute(), targetTime.Second(), targetTime.Nanosecond(), time.UTC)
@@ -1277,23 +1259,4 @@ func generatePrintDetail(c *gin.Context) {
 
 	fmt.Println(customers)
 	c.JSON(200, gin.H{"message": "Success"})
-}
-func ExtractData(input string) (string, error) {
-
-	pattern := `\|(.*)`
-
-	regExp, err := regexp.Compile(pattern)
-	if err != nil {
-		return "", fmt.Errorf("正则表达式编译错误: %s", err)
-	}
-
-	match := regExp.FindStringSubmatch(input)
-
-	if len(match) > 1 {
-
-		extractedData := match[1]
-		return extractedData, nil
-	} else {
-		return "", fmt.Errorf("未找到匹配的内容")
-	}
 }

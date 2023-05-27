@@ -467,7 +467,7 @@ testButton.onclick = function(){
 }
 function showPrompt() {
  
-      input = prompt("還款/輸入-1為全部還款", 0);
+      input = prompt("還款", 0);
       
       /*
       customerID = document.getElementById("customerID");
