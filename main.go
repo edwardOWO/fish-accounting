@@ -1141,7 +1141,9 @@ func generatePrintDetail(c *gin.Context) {
 			err = rows2.Scan(&preCount)
 		}
 
-		rows, err := db.Query("SELECT CustomerName,FishName,Date,Price,Weight,Fraction,Package,TotalPrice,PaymentsResult,PaymentAmount,Print  FROM accountDetail WHERE ID=? AND clear=false", customer.ID)
+		// rows, err := db.Query("SELECT CustomerName,FishName,Date,Price,Weight,Fraction,Package,TotalPrice,PaymentsResult,PaymentAmount,Print  FROM accountDetail WHERE ID=? AND clear=false", customer.ID)
+
+		rows, err := db.Query("SELECT CustomerName,FishName,Date,Price,Weight,Fraction,Package,TotalPrice,PaymentsResult,PaymentAmount,Print  FROM accountDetail WHERE ID=? AND clear=? ORDER BY Date, DataIndex ASC", customer.ID, false)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -1167,15 +1169,12 @@ func generatePrintDetail(c *gin.Context) {
 			}
 			index++
 
-			if fish.PaymentsResult != "" {
+			// 打印未印的表單
+			if print == false {
 
-				Result += fish.PaymentsResult
-				WriteToFile("fish.txt", Result)
-			} else {
-
-				// 打印未印的表單
-				if print == false {
-
+				if fish.PaymentsResult != "" {
+					WriteToFile("fish.txt", fish.PaymentsResult)
+				} else {
 					date, err := time.Parse(time.RFC3339, fish.Date)
 					if err != nil {
 						fmt.Println("日期解析失败:", err)
@@ -1190,10 +1189,10 @@ func generatePrintDetail(c *gin.Context) {
 					Result += " "
 					Result += fish.FishName
 					Result += " "
-					Result += strconv.Itoa(fish.Price)
-					Result += " "
 					s := strconv.FormatFloat(float64(fish.Weight), 'f', -1, 32)
 					Result += s
+					Result += " "
+					Result += strconv.Itoa(fish.Price)
 					Result += " "
 					s = strconv.FormatFloat(float64(fish.Fraction), 'f', -1, 32)
 					Result += s
@@ -1201,8 +1200,6 @@ func generatePrintDetail(c *gin.Context) {
 					Result += fish.Package
 					Result += " "
 					Result += strconv.Itoa(fish.TotalPrice)
-					Result += " "
-					Result += fish.PaymentsResult
 					WriteToFile("fish.txt", Result)
 				}
 			}

@@ -412,6 +412,10 @@ function InsertCheckout(datePart,result){
 testButton.onclick = function(){
     
     showPrompt()
+
+    // 設定為系統最上面
+    data_index=0
+
     var newRow = table.insertRow(-1);
     var totalColumns = table.rows[0].cells.length;
     var cell = newRow.insertCell(0);
