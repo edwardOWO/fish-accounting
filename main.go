@@ -1164,7 +1164,7 @@ func generatePrintDetail(c *gin.Context) {
 			if index == 0 {
 				Result += fish.CustomerName
 				WriteToFile("fish.txt", Result)
-				WriteToFile("fish.txt", "    前帳: "+strconv.Itoa(preCount))
+				WriteToFile("fish.txt", "前帳: "+strconv.Itoa(preCount))
 				Result = ""
 			}
 			index++
@@ -1196,8 +1196,6 @@ func generatePrintDetail(c *gin.Context) {
 					Result += " "
 					s = strconv.FormatFloat(float64(fish.Fraction), 'f', -1, 32)
 					Result += s
-					Result += " "
-					Result += fish.Package
 					Result += " "
 					Result += strconv.Itoa(fish.TotalPrice)
 					WriteToFile("fish.txt", Result)
