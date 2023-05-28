@@ -69,6 +69,8 @@ func init_db() {
 	}
 	defer db.Close()
 
+	//testPresure()
+
 	// 建立 today_customer 資料表
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Customer (
 			ID INTEGER,
@@ -123,6 +125,36 @@ func init_db() {
 	// 建立初始化使用者
 
 	fmt.Println("today_customer 資料表建立成功")
+}
+func testPresure() {
+
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	id := 10
+	detail := Fish{}
+	detail.ID = id
+	detail.CustomerName = ""
+	detail.Date = "2023-05-01 00:00:00+00:00"
+	detail.FishName = ""
+	detail.Fraction = float32(0)
+	detail.INDEX = 999
+	detail.Package = ""
+	detail.PaymentAmount = 0
+	detail.PaymentsResult = "共:"
+	detail.Price = 0
+	detail.TotalPrice = 0
+	detail.Clear = true
+
+	for i := 0; i < 100000; i++ {
+		db.Exec("INSERT INTO accountDetail (ID, CustomerName, Date, FishName, Weight, Price, Fraction, Package, TotalPrice, Print, DataIndex,PaymentsResult,Clear,PaymentAmount ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)",
+			detail.ID, detail.CustomerName, detail.Date, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, true, detail.INDEX, detail.PaymentsResult, detail.Clear, detail.PaymentAmount)
+
+	}
+
 }
 
 func insertSelectCustomer(setting string, name string, id int, date time.Time, sort int, TodayArrears int, PaymentsResult string) error {
