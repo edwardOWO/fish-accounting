@@ -309,15 +309,15 @@ func clear(c *gin.Context) {
 	for _, detail := range fishes {
 
 		var count int
-		err := db.QueryRow("SELECT COUNT(*) FROM accountDetail WHERE DataIndex = ? AND Date = ?", detail.INDEX, t).Scan(&count)
+		err := db.QueryRow("SELECT COUNT(*) FROM accountDetail WHERE DataIndex = ? AND Date = ? AND ID = ?", detail.INDEX, t, detail.ID).Scan(&count)
 		if err != nil {
 			count = 1
 		}
 
 		if count > 0 {
 
-			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ?,PaymentAmount= ? WHERE DataIndex = ? AND Date = ?",
-				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, "", fishes[0].PaymentAmount, detail.INDEX, t)
+			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ?,PaymentAmount= ? WHERE DataIndex = ? AND Date = ? AND ID = ?",
+				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, "", fishes[0].PaymentAmount, detail.INDEX, t, detail.ID)
 			if err != nil {
 
 				fmt.Print(err.Error())
@@ -547,15 +547,15 @@ func handlePostFish(c *gin.Context) {
 	for _, detail := range fishes {
 
 		var count int
-		err := db.QueryRow("SELECT COUNT(*) FROM accountDetail WHERE DataIndex = ? AND Date = ?", detail.INDEX, t).Scan(&count)
+		err := db.QueryRow("SELECT COUNT(*) FROM accountDetail WHERE DataIndex = ? AND Date = ? AND ID=?", detail.INDEX, t, fishes[0].ID).Scan(&count)
 		if err != nil {
 			count = 1
 		}
 
 		if count > 0 {
 			// 执行更新操作
-			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ? ,PaymentAmount = ? WHERE DataIndex = ? AND Date = ?",
-				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, detail.PaymentsResult, detail.PaymentAmount, detail.INDEX, t)
+			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ? ,PaymentAmount = ? WHERE DataIndex = ? AND Date = ? AND ID=?",
+				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, detail.PaymentsResult, detail.PaymentAmount, detail.INDEX, t, fishes[0].ID)
 		} else {
 			// 执行插入操作
 			_, err = db.Exec("INSERT INTO accountDetail (ID, CustomerName, Date, FishName, Weight, Price, Fraction, Package, TotalPrice, Print, DataIndex,PaymentsResult,Clear, PaymentAmount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,0)",
@@ -1123,7 +1123,16 @@ func generatePrintDetail(c *gin.Context) {
     .text-content {
       white-space: pre;
       font-size: 15px;
+	  margin-top: -15px; /* 调整顶部边距 */
     }
+	.shorten-distance {
+		margin-top: -20px; /* 调整顶部边距 */
+		margin-bottom: 5px; /* 调整底部边距 */
+		font-size: 12px; /* 缩小字体大小 */
+	}
+	.shorten-distance2 {
+		margin-top: -6px; /* 调整顶部边距 */
+	}
   </style>
   </style>
 </head>
@@ -1144,6 +1153,7 @@ func generatePrintDetail(c *gin.Context) {
 		return
 	}
 	id := 0
+	sum_index := 0
 	for _, customer := range customers {
 
 		rows2, err2 := db.Query("SELECT TotalArrears  from Customer where ID=?", customer.ID)
@@ -1170,6 +1180,7 @@ func generatePrintDetail(c *gin.Context) {
 		index := 0
 		TotalArrears := 0
 		Income := 0
+
 		for rows.Next() {
 			print := false
 			err = rows.Scan(&fish.CustomerName, &fish.FishName, &fish.Date, &fish.Price, &fish.Weight, &fish.Fraction, &fish.Package, &fish.TotalPrice, &fish.PaymentsResult, &fish.PaymentAmount, &print)
@@ -1178,19 +1189,24 @@ func generatePrintDetail(c *gin.Context) {
 			Income += fish.PaymentAmount
 
 			if index == 0 {
-				WriteToFile("fish.txt", "<h2>")
+				WriteToFile("fish.txt", "<pre class=\"shorten-distance\">-----------------------------------------------</pre>")
+				WriteToFile("fish.txt", "<h2 class=\"shorten-distance2\">")
 				WriteToFile("fish.txt", fish.CustomerName)
 				WriteToFile("fish.txt", "</h2>")
 				WriteToFile("fish.txt", "<pre class=\"text-content\">")
 
-				WriteToFile("fish.txt", "前帳: "+strconv.Itoa(preCount))
+				if preCount != 0 {
+					WriteToFile("fish.txt", "前帳: "+strconv.Itoa(preCount))
+					index++
+				}
+
 			}
-			index++
 
 			// 打印未印的表單
 			if print == false {
 
 				if fish.PaymentsResult != "" {
+					index++
 					WriteToFile("fish.txt", fish.PaymentsResult)
 				} else {
 					date, err := time.Parse(time.RFC3339, fish.Date)
@@ -1203,15 +1219,24 @@ func generatePrintDetail(c *gin.Context) {
 					format := "01/02"
 					formattedDate := date.Format(format)
 
-					paddedStr := fmt.Sprintf("%-5s %-3s %-6s %-4s %-3s %-4s", formattedDate, fish.FishName, strconv.FormatFloat(float64(fish.Weight), 'f', -1, 32), strconv.Itoa(fish.Price), strconv.FormatFloat(float64(fish.Fraction), 'f', -1, 32), strconv.Itoa(fish.TotalPrice))
+					paddedStr := fmt.Sprintf("%-5s %-3s %-6s %-4s %-3s %-4s", formattedDate, fish.FishName, strconv.FormatFloat(float64(fish.Weight), 'f', -1, 32)+"k", strconv.Itoa(fish.Price), strconv.FormatFloat(float64(fish.Fraction), 'f', -1, 32), strconv.Itoa(fish.TotalPrice))
+					index++
 					WriteToFile("fish.txt", paddedStr)
 				}
 			}
 
 		}
+
+		if index <= 14 {
+
+			for i := 1; i <= 14-index; i++ {
+				WriteToFile("fish.txt", "")
+			}
+		}
+
 		WriteToFile("fish.txt", "</pre>")
 		WriteToFile("fish.txt", "<h4>盛: "+strconv.Itoa(TotalArrears-Income)+"</h4>")
-		WriteToFile("fish.txt", "<pre>-----------------------------------------------</pre>")
+		WriteToFile("fish.txt", "<pre class=\"shorten-distance\">-----------------------------------------------</pre>")
 
 		_, err = db.Exec("UPDATE Customer SET TotalArrears = ? WHERE ID = ?", strconv.Itoa(TotalArrears-Income), id)
 		if err != nil {
@@ -1264,6 +1289,13 @@ func generatePrintDetail(c *gin.Context) {
 			detail.ID, detail.CustomerName, detail.Date, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, true, detail.INDEX, detail.PaymentsResult, detail.Clear, detail.PaymentAmount)
 		if err != nil {
 			fmt.Print(err.Error())
+		}
+
+		sum_index += index
+
+		if sum_index > 29 {
+			sum_index = 0
+			WriteToFile("fish.txt", "<div style=\"page-break-before: always;\"></div>")
 		}
 
 	}

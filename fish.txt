@@ -7,34 +7,87 @@
     .text-content {
       white-space: pre;
       font-size: 15px;
+	  margin-top: -15px; /* 调整顶部边距 */
     }
+	.shorten-distance {
+		margin-top: -20px; /* 调整顶部边距 */
+		margin-bottom: 5px; /* 调整底部边距 */
+		font-size: 12px; /* 缩小字体大小 */
+	}
+	.shorten-distance2 {
+		margin-top: -6px; /* 调整顶部边距 */
+	}
   </style>
   </style>
 </head>
 <body>
 	
-<h2>
-test
+<pre class="shorten-distance">-----------------------------------------------</pre>
+<h2 class="shorten-distance2">
+王曉明
 </h2>
 <pre class="text-content">
-前帳: 9085
-05/01 皮刀  60     300  1   19085
-05/02 入=10000 欠=2929683
+07/01 赤宗  10k    100  1   1065
+07/01 黃花  10k    100  1   1065
+07/01 赤宗  10k    100  1   1065
+
+
+
+
+
+
+
+
+
+
+
 </pre>
-<h4>盛: 9085</h4>
-<pre>-----------------------------------------------</pre>
-<h2>
-test2
+<h4>盛: 3195</h4>
+<pre class="shorten-distance">-----------------------------------------------</pre>
+<pre class="shorten-distance">-----------------------------------------------</pre>
+<h2 class="shorten-distance2">
+王大明
 </h2>
 <pre class="text-content">
-前帳: 2209
-05/01 熟卷  100    2    1   217 
-05/01 草魚  20     3    1   69  
-05/01 草魚  100    4    2   858 
-05/01 草魚  200    5    1   1065
+07/01 赤宗  10k    100  1   1065
+07/01 赤宗  10k    1000 1   10605
+07/01 赤宗  10k    100  1   1065
+
+
+
+
+
+
+
+
+
+
+
 </pre>
-<h4>盛: 2209</h4>
-<pre>-----------------------------------------------</pre>
+<h4>盛: 12735</h4>
+<pre class="shorten-distance">-----------------------------------------------</pre>
+<pre class="shorten-distance">-----------------------------------------------</pre>
+<h2 class="shorten-distance2">
+王聰明
+</h2>
+<pre class="text-content">
+07/01 赤宗  100k   10   1   1065
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+<h4>盛: 1065</h4>
+<pre class="shorten-distance">-----------------------------------------------</pre>
 
 	<button onclick="window.print()">列印文字</button>
 	</body>
