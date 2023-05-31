@@ -13,7 +13,7 @@
     }
 
     td {
-      width: 100px;
+      width: 150px;
       height: 50px;
       text-align: center;
       vertical-align: middle;
@@ -76,7 +76,7 @@
       xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
       xhr.send(JSON.stringify(data));
       //alert("選取 " + custome_index + "位客戶,轉跳到輸入頁面")
-      //window.location = "http://127.0.0.1:8080/input";
+      window.open("http://127.0.0.1:8080/print", "_blank");
     };
     const url = "/get_customer_name";
     const table = document.getElementById("myTable");
@@ -101,7 +101,17 @@
             td.append(tempSpan0);
             // 暫存名字 ID
             const tempSpan1 = document.createElement("span1");
-            tempSpan1.innerText = data[i].name;
+
+            // 當前帳目金額
+            todayArrears=" "
+            todayArrears+=data[i].todayArrears
+
+            //if (data[i].todayArrears >0){
+            //  todayArrears+=" 未印"
+            //}
+
+
+            tempSpan1.innerText = data[i].name+=todayArrears;
             td.append(tempSpan1);
             // 暫存排序 Sort
             const tempSpan2 = document.createElement("span2");

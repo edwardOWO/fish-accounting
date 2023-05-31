@@ -311,7 +311,7 @@ NextButton.onclick = function(){
 
     
 
-    url="/UpdateCurrentArrears?id="
+    url="/UpdateTodayArrears?id="
     const xhr2 = new XMLHttpRequest();
     xhr2.open('POST', url+=id)
     xhr2.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');

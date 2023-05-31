@@ -78,7 +78,7 @@ func init_db() {
 			ID INTEGER,
 			Name TEXT,
 			TotalArrears Int,
-			CurrentArrears Int
+			TodayArrears Int
 		)`)
 	if err != nil {
 		fmt.Println(err)
@@ -301,7 +301,7 @@ func main() {
 	router.POST("/PrintAndClose", PrintAndClose)
 
 	// 更新當前最新帳款
-	router.POST("/UpdateCurrentArrears", UpdateCurrentArrears)
+	router.POST("/UpdateTodayArrears", UpdateTodayArrears)
 
 	// 讀取今天的帳款
 	router.GET("/get_customer_account_date", get_customer_account_date)
@@ -320,7 +320,7 @@ func main() {
 	router.Run(":8080")
 }
 
-func UpdateCurrentArrears(c *gin.Context) {
+func UpdateTodayArrears(c *gin.Context) {
 
 	id := c.Query("id")
 
@@ -360,7 +360,7 @@ func UpdateCurrentArrears(c *gin.Context) {
 	TotalArrears += Imcome
 
 	// 更新當前最新帳款
-	_, err = db.Exec("UPDATE Customer SET CurrentArrears = ? WHERE ID = ?", TotalArrears, fishes[0].ID)
+	_, err = db.Exec("UPDATE Customer SET TodayArrears = ? WHERE ID = ?", TotalArrears, id)
 	if err != nil {
 
 		fmt.Print(err.Error())
@@ -703,7 +703,7 @@ func handleCustome(c *gin.Context) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT ID,Name,TotalArrears FROM Customer")
+	rows, err := db.Query("SELECT ID,Name,TotalArrears,TodayArrears FROM Customer")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -711,7 +711,7 @@ func handleCustome(c *gin.Context) {
 
 	for rows.Next() {
 		var customer Customer
-		err := rows.Scan(&customer.ID, &customer.Name, &customer.TotalArrears)
+		err := rows.Scan(&customer.ID, &customer.Name, &customer.TotalArrears, &customer.TodayArrears)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -1324,6 +1324,12 @@ func generatePrintDetail(c *gin.Context) {
 		WriteToFile("fish.txt", "<pre class=\"shorten-distance\">-----------------------------------------------</pre>")
 
 		_, err = db.Exec("UPDATE Customer SET TotalArrears = ? WHERE ID = ?", strconv.Itoa(TotalArrears-Income), id)
+		if err != nil {
+
+			fmt.Print(err.Error())
+		}
+
+		_, err = db.Exec("UPDATE Customer SET TodayArrears = ? WHERE ID = ?", 0, id)
 		if err != nil {
 
 			fmt.Print(err.Error())
