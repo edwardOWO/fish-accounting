@@ -308,6 +308,14 @@ NextButton.onclick = function(){
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     xhr.send(JSON.stringify(data));
 
+
+    
+
+    url="/UpdateCurrentArrears?id="
+    const xhr2 = new XMLHttpRequest();
+    xhr2.open('POST', url+=id)
+    xhr2.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    xhr2.send(JSON.stringify(data));
     window.location.reload();
   
 }

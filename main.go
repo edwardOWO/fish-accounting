@@ -72,10 +72,13 @@ func init_db() {
 	//testPresure()
 
 	// 建立 today_customer 資料表
+	// 未印帳款加總
+	// 當前帳目加總
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Customer (
 			ID INTEGER,
 			Name TEXT,
-			TotalArrears Int
+			TotalArrears Int,
+			CurrentArrears Int
 		)`)
 	if err != nil {
 		fmt.Println(err)
@@ -297,6 +300,9 @@ func main() {
 	// 選則下一個客戶
 	router.POST("/PrintAndClose", PrintAndClose)
 
+	// 更新當前最新帳款
+	router.POST("/UpdateCurrentArrears", UpdateCurrentArrears)
+
 	// 讀取今天的帳款
 	router.GET("/get_customer_account_date", get_customer_account_date)
 
@@ -312,6 +318,53 @@ func main() {
 	})
 
 	router.Run(":8080")
+}
+
+func UpdateCurrentArrears(c *gin.Context) {
+
+	id := c.Query("id")
+
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	var fishes []Fish
+	if err := c.BindJSON(&fishes); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	rows, err := db.Query(`select TotalPrice,PaymentAmount from  accountDetail WHERE  ID=? and Clear=false`, id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	TotalArrears := 0
+	Imcome := 0
+	for rows.Next() {
+		TotalPrice := 0
+		PaymentAmount := 0
+		err := rows.Scan(&TotalPrice, &PaymentAmount)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		TotalArrears += TotalPrice
+		Imcome += PaymentAmount
+	}
+
+	TotalArrears += Imcome
+
+	// 更新當前最新帳款
+	_, err = db.Exec("UPDATE Customer SET CurrentArrears = ? WHERE ID = ?", TotalArrears, fishes[0].ID)
+	if err != nil {
+
+		fmt.Print(err.Error())
+	}
 }
 
 func clear(c *gin.Context) {
@@ -650,7 +703,7 @@ func handleCustome(c *gin.Context) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT * FROM Customer")
+	rows, err := db.Query("SELECT ID,Name,TotalArrears FROM Customer")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -945,7 +998,7 @@ func get_today_customer_name(c *gin.Context) {
 }
 
 func handleProduct(c *gin.Context) {
-	customers := []Product{
+	Products := []Product{
 		{1, "白鯧", "0"},
 		{2, "黑鯧", "1"},
 		{3, "銀鯧", "2"},
@@ -1047,7 +1100,7 @@ func handleProduct(c *gin.Context) {
 		{99, "厚唇", "98"},
 		{100, "牛舌", "99"},
 	}
-	c.JSON(http.StatusOK, customers)
+	c.JSON(http.StatusOK, Products)
 }
 func WriteToFile(filename string, data string) error {
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
