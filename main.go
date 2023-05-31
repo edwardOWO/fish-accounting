@@ -357,7 +357,7 @@ func UpdateTodayArrears(c *gin.Context) {
 		Imcome += PaymentAmount
 	}
 
-	TotalArrears += Imcome
+	TotalArrears = TotalArrears - Imcome
 
 	// 更新當前最新帳款
 	_, err = db.Exec("UPDATE Customer SET TodayArrears = ? WHERE ID = ?", TotalArrears, id)

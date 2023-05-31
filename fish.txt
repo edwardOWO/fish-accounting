@@ -27,8 +27,8 @@
 王小明
 </h2>
 <pre class="text-content">
-前帳: 111
-06/02 熟卷  2k     100  1   217 
+前帳: 1282
+06/10 入=1282 欠=0
 
 
 
@@ -42,7 +42,7 @@
 
 
 </pre>
-<h4>盛: 328</h4>
+<h4>盛: 0</h4>
 <pre class="shorten-distance">-----------------------------------------------</pre>
 
 	<button onclick="window.print()">列印文字</button>
