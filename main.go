@@ -48,6 +48,7 @@ type Customer struct {
 	PaymentsResult string    `json:"PaymentsResult"`
 	Clear          bool      `json:"Clear"`
 	Sort           int       `json:"sort"`
+	Print          bool      `json:"print"`
 }
 type CustomerList struct {
 	Customers []Customer `json:"customers"`
@@ -78,7 +79,8 @@ func init_db() {
 			ID INTEGER,
 			Name TEXT,
 			TotalArrears Int,
-			TodayArrears Int
+			TodayArrears Int,
+			Print Bool
 		)`)
 	if err != nil {
 		fmt.Println(err)
@@ -336,6 +338,18 @@ func UpdateTodayArrears(c *gin.Context) {
 		return
 	}
 
+	rows2, err := db.Query(`select TodayArrears  from  Customer  WHERE  ID=?`, id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows2.Close()
+
+	TodayArrears := 0
+	for rows2.Next() {
+		rows2.Scan(&TodayArrears)
+	}
+
+	// 計算當前欠款金額
 	rows, err := db.Query(`select TotalPrice,PaymentAmount from  accountDetail WHERE  ID=? and Clear=false`, id)
 	if err != nil {
 		log.Fatal(err)
@@ -356,15 +370,26 @@ func UpdateTodayArrears(c *gin.Context) {
 		TotalArrears += TotalPrice
 		Imcome += PaymentAmount
 	}
-
 	TotalArrears = TotalArrears - Imcome
 
-	// 更新當前最新帳款
-	_, err = db.Exec("UPDATE Customer SET TodayArrears = ? WHERE ID = ?", TotalArrears, id)
-	if err != nil {
+	if TodayArrears != TotalArrears && TotalArrears > 0 {
 
-		fmt.Print(err.Error())
+		// 更新當前最新帳款
+		_, err = db.Exec("UPDATE Customer SET TodayArrears = ?,Print = ? WHERE ID = ?", TotalArrears, false, id)
+		if err != nil {
+
+			fmt.Print(err.Error())
+		}
+
+	} else {
+		// 更新當前最新帳款
+		_, err = db.Exec("UPDATE Customer SET TodayArrears = ? WHERE ID = ?", TotalArrears, id)
+		if err != nil {
+
+			fmt.Print(err.Error())
+		}
 	}
+
 }
 
 func clear(c *gin.Context) {
@@ -703,7 +728,7 @@ func handleCustome(c *gin.Context) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT ID,Name,TotalArrears,TodayArrears FROM Customer")
+	rows, err := db.Query("SELECT ID,Name,TotalArrears,TodayArrears,Print FROM Customer")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -711,7 +736,7 @@ func handleCustome(c *gin.Context) {
 
 	for rows.Next() {
 		var customer Customer
-		err := rows.Scan(&customer.ID, &customer.Name, &customer.TotalArrears, &customer.TodayArrears)
+		err := rows.Scan(&customer.ID, &customer.Name, &customer.TotalArrears, &customer.TodayArrears, &customer.Print)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -1329,11 +1354,17 @@ func generatePrintDetail(c *gin.Context) {
 			fmt.Print(err.Error())
 		}
 
-		_, err = db.Exec("UPDATE Customer SET TodayArrears = ? WHERE ID = ?", 0, id)
+		_, err = db.Exec("UPDATE Customer SET Print = ? WHERE ID = ?", true, id)
 		if err != nil {
 
 			fmt.Print(err.Error())
 		}
+
+		//_, err = db.Exec("UPDATE Customer SET TodayArrears = ? WHERE ID = ?", 0, id)
+		//if err != nil {
+
+		//			fmt.Print(err.Error())
+		//}
 
 		if TotalArrears-Income == 0 {
 

@@ -92,33 +92,43 @@
             if (i >= data.length) {
               break;
             }
-            const td = document.createElement("td");
-            //td.innerText = data[i].name;
-            // 暫存 ID
-            const tempSpan0 = document.createElement("span0");
-            tempSpan0.innerText = data[i].id;
-            tempSpan0.style.display = "none";
-            td.append(tempSpan0);
-            // 暫存名字 ID
-            const tempSpan1 = document.createElement("span1");
 
-            // 當前帳目金額
-            todayArrears=" "
-            todayArrears+=data[i].todayArrears
+              if (data[i].todayArrears >0){
+              //alert("test")
+              
+            
+              const td = document.createElement("td");
+              //td.innerText = data[i].name;
+              // 暫存 ID
+              const tempSpan0 = document.createElement("span0");
+              tempSpan0.innerText = data[i].id;
+              tempSpan0.style.display = "none";
+              td.append(tempSpan0);
+              // 暫存名字 ID
+              const tempSpan1 = document.createElement("span1");
 
-            //if (data[i].todayArrears >0){
-            //  todayArrears+=" 未印"
-            //}
+              // 當前帳目金額
+              todayArrears=" "
+              todayArrears+=data[i].todayArrears
+
+              if (data[i].print ==true){
+                todayArrears+=" E"
+              }else {
+                todayArrears+=" "
+              }
 
 
-            tempSpan1.innerText = data[i].name+=todayArrears;
-            td.append(tempSpan1);
-            // 暫存排序 Sort
-            const tempSpan2 = document.createElement("span2");
-            tempSpan2.innerText = "";
-            td.append(tempSpan2);
-            tr.appendChild(td);
-            i++;
+            
+              tempSpan1.innerText = data[i].name+=todayArrears;
+              td.append(tempSpan1);
+              // 暫存排序 Sort
+              const tempSpan2 = document.createElement("span2");
+              tempSpan2.innerText = "";
+              td.append(tempSpan2);
+              tr.appendChild(td);
+              }
+              i++;
+            
           }
           table.appendChild(tr);
         }
