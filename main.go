@@ -1240,7 +1240,13 @@ func generatePrintAllHTML(c *gin.Context) {
 	defer rows2.Close()
 	Name := ""
 	TotalArrears := 0
+
+	firstOutput := ""
+	secondOutput := ""
+	thirdOutput := ""
+	index := 0
 	for rows2.Next() {
+
 		Result := ""
 		rows2.Scan(&Name, &TotalArrears)
 
@@ -1248,8 +1254,31 @@ func generatePrintAllHTML(c *gin.Context) {
 		Result += ":"
 		Result += strconv.Itoa(TotalArrears)
 
-		WriteToFile("templates/print_allaccount.html", Result)
+		if index == 0 {
+			firstOutput = Result
+			index += 1
+			continue
+		}
+
+		if index == 1 {
+			secondOutput = Result
+			index += 1
+			continue
+		}
+
+		if index == 2 {
+			thirdOutput = Result
+			paddedStr := fmt.Sprintf("%-20s        %-20s        %-20s", firstOutput, secondOutput, thirdOutput)
+			WriteToFile("templates/print_allaccount.html", paddedStr)
+			firstOutput = ""
+			secondOutput = ""
+			thirdOutput = ""
+			index = 0
+		}
+
 	}
+	paddedStr := fmt.Sprintf("%-10s %-10s %-10s", firstOutput, secondOutput, thirdOutput)
+	WriteToFile("templates/print_allaccount.html", paddedStr)
 
 	tmpl := template.Must(template.ParseFiles("templates/print_allaccount.html"))
 

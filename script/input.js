@@ -852,6 +852,9 @@ table.addEventListener("keydown", function(event) {
             if (table.rows[currentRow].cells[currentCol].innerHTML=="c"){
                 table.rows[currentRow].cells[currentCol].innerHTML="2大"
             }
+            if (table.rows[currentRow].cells[currentCol].innerHTML=="5"){
+                table.rows[currentRow].cells[currentCol].innerHTML="清"
+            }
             if (table.rows[currentRow].cells[currentCol].innerHTML==""){
                 data = table.rows[currentRow].cells[currentCol].innerText=0
             }
@@ -909,6 +912,14 @@ table.addEventListener("keydown", function(event) {
 
                 result=Math.round(result*multiple)
 
+
+                 // 清帳
+                 if(table.rows[currentRow].cells[5].innerText == "清"){
+                    result=price*weight
+                    result=result*multiple
+                 }
+ 
+
                 table.rows[currentRow].cells[6].innerHTML = result
 
 
@@ -935,6 +946,9 @@ table.addEventListener("keydown", function(event) {
                     }
                     
                 }
+
+               
+                
                 current_count.innerHTML=sum
 
 
@@ -1000,7 +1014,13 @@ table.addEventListener("keydown", function(event) {
 
         case 83: // clear col
         event.preventDefault();
-        button=document.getElementById('myButton');
+        button=document.getElementById('NextButton');
+        button.click()
+        break;
+
+        case 66: // clear col
+        event.preventDefault();
+        button=document.getElementById('testButton');
         button.click()
         break;
 
