@@ -252,6 +252,9 @@ func main() {
 	// 產生列印檔案
 	router.POST("/print", generatePrintDetail)
 
+	// 產生列印檔案
+	router.GET("/printAllaccount", generatePrintAllHTML)
+
 	// 帳目狀況
 	router.GET("/status", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "status.html", gin.H{})
@@ -1220,6 +1223,43 @@ func generatePrintHTML(c *gin.Context) {
 	}
 }
 
+func generatePrintAllHTML(c *gin.Context) {
+
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	os.Truncate("templates/print_allaccount.html", 0)
+
+	rows2, err := db.Query(`select Name,TotalArrears  from  Customer  WHERE  Print=?`, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows2.Close()
+	Name := ""
+	TotalArrears := 0
+	for rows2.Next() {
+		Result := ""
+		rows2.Scan(&Name, &TotalArrears)
+
+		Result += Name
+		Result += ":"
+		Result += strconv.Itoa(TotalArrears)
+
+		WriteToFile("templates/print_allaccount.html", Result)
+	}
+
+	tmpl := template.Must(template.ParseFiles("templates/print_allaccount.html"))
+
+	// 產生 HTML
+	err = tmpl.Execute(c.Writer, "data")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func generatePrintDetail(c *gin.Context) {
 
 	os.Truncate("fish.txt", 0)
@@ -1356,7 +1396,6 @@ func generatePrintDetail(c *gin.Context) {
 
 		_, err = db.Exec("UPDATE Customer SET Print = ? WHERE ID = ?", true, id)
 		if err != nil {
-
 			fmt.Print(err.Error())
 		}
 

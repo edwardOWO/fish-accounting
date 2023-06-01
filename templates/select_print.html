@@ -35,11 +35,12 @@
 
 <body>
   <div>
-    <h>記帳日期:</h>
-    <h id="currentDate">記帳日期:</h>
+    <h>列印日期:</h>
+    <h id="currentDate">列印日期:</h>
   </div>
   <table id="myTable"></table>
-  <button id="myButton">傳送表單</button>
+  <button id="myButton">列印小單子</button>
+  <button id="myButton2">列印總帳單</button>
   <script>
     let custome_index = 0;
     myButton.onclick = function() {
@@ -78,6 +79,14 @@
       //alert("選取 " + custome_index + "位客戶,轉跳到輸入頁面")
       window.open("http://127.0.0.1:8080/print", "_blank");
     };
+
+    myButton2.onclick = function() {
+
+      window.open("http://127.0.0.1:8080/printAllaccount", "_blank");
+    }
+
+
+
     const url = "/get_customer_name";
     const table = document.getElementById("myTable");
     let currentX = 0;
