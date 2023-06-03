@@ -1439,6 +1439,7 @@ func generatePrintDetail(c *gin.Context) {
 			for i := 1; i <= 14-index; i++ {
 				WriteToFile("fish.txt", "")
 			}
+			index = 14
 		}
 
 		WriteToFile("fish.txt", "</pre>")
