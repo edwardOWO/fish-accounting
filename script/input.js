@@ -421,6 +421,16 @@ testButton.onclick = function(){
     
     showPrompt()
 
+    if (input =="3"){
+        alert("離開")
+        return 0
+    }
+
+    sum=input
+
+
+    // 如果設定數值為入賬,還的金額大於 2元時,可以進行還賬
+    if (sum>2){
     // 設定為系統最上面
     data_index=0
 
@@ -429,7 +439,6 @@ testButton.onclick = function(){
     var cell = newRow.insertCell(0);
     cell.colSpan = 7;
     cell.contentEditable = true;
-    sum=input
     //accountResult= "共: "+document.getElementById("current_count").innerText+" 入:"+test+" 欠:"+sum;
     accountResult=""
     cell.innerText =accountResult
@@ -453,81 +462,101 @@ testButton.onclick = function(){
     var customer = document.getElementById("customer");
     customerName = customer.innerText;
 
-    data.push({
-        id: parseInt(id),
-        date: currentDate.innerHTML,
-        fishName: "",
-        weight: parseFloat(0),
-        price: parseInt(0),
-        fraction: parseFloat(0),
-        package: "",
-        totalPrice: parseInt(0),
-        customerName: customerName,
-        index: parseInt(data_index),
-        paymentamount: parseInt(sum),
-        paymentsresult: accountResult,
-        Clear: false,
-        });
-
     
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/clear?income='+sum);
-    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-    xhr.send(JSON.stringify(data));
-    data_index++;
-    window.location.reload();
+        data.push({
+            id: parseInt(id),
+            date: currentDate.innerHTML,
+            fishName: "",
+            weight: parseFloat(0),
+            price: parseInt(0),
+            fraction: parseFloat(0),
+            package: "",
+            totalPrice: parseInt(0),
+            customerName: customerName,
+            index: parseInt(data_index),
+            paymentamount: parseInt(sum),
+            paymentsresult: accountResult,
+            Clear: false,
+            });
+
+        
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/clear?income='+sum);
+        xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+        xhr.send(JSON.stringify(data));
+        data_index++;
+        window.location.reload();
+
+    }else if (sum =="1"){ // 如果設定為完帳,設定為1的情況,進行完帳
+        data_index=0
+
+        var newRow = table.insertRow(-1);
+        var totalColumns = table.rows[0].cells.length;
+        var cell = newRow.insertCell(0);
+        cell.colSpan = 7;
+        cell.contentEditable = true;
+        //accountResult= "共: "+document.getElementById("current_count").innerText+" 入:"+test+" 欠:"+sum;
+        accountResult=""
+        cell.innerText =accountResult
+        cell.style.textAlign = "mid";
+        var cell = newRow.insertCell(0);
+        cell.innerText=document.getElementById("currentDate").innerText;
+        cell.colSpan = 1;
+        cell.contentEditable = true;
+
+        customerID = document.getElementById("customerID");
+        customer = document.getElementById("customer");
+        currentDate = document.getElementById("currentDate");
+
+        var timestamp = Date.parse(currentDate.innerText);
+        var date = new Date(timestamp);
+
+
+        const data = [];
+        var customerID = document.getElementById("customerID");
+        id = customerID.innerText;
+        var customer = document.getElementById("customer");
+        customerName = customer.innerText;
+
+        
+            data.push({
+                id: parseInt(id),
+                date: currentDate.innerHTML,
+                fishName: "",
+                weight: parseFloat(0),
+                price: parseInt(0),
+                fraction: parseFloat(0),
+                package: "",
+                totalPrice: parseInt(0),
+                customerName: customerName,
+                index: parseInt(data_index),
+                paymentamount: 0,
+                paymentsresult: "完帳",
+                Clear: false,
+                });
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/clear?income='+sum);
+            xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhr.send(JSON.stringify(data));
+            data_index++;
+            window.location.reload();
+    }
 }
 function showPrompt() {
  
-      input = prompt("還款", 0);
-      
-      /*
-      customerID = document.getElementById("customerID");
-      currentDate = document.getElementById("currentDate");
+      input = prompt("1)完帳 2)入賬 3離開", 3);
 
+      if (input == "1"){
 
-      if (test==-1){
-        alert("全部還款")
-      }else{
-        alert("還款: "+test+"元")
+        alert("完帳")
       }
 
 
+      if (input =="2"){
+        input = prompt("入賬金額", 0);
+      }
 
-    if (test!=-1){
-
-        fetch("http://127.0.0.1:8080/clear?id="+customerID.innerText+"&payment="+test+"&date="+currentDate.innerText)
-        .then(response => {
-            // Handle the response
-            if (response.ok) {
-            console.log('Request successful');
-            // Process the response data if needed
-            } else {
-            console.log('Request failed');
-            // Handle the error
-            }
-        })
-        .catch(error => {
-            console.log('An error occurred:', error);
-        });
-    }else{
-        fetch("http://127.0.0.1:8080/clear?id="+customerID.innerText+"&date="+currentDate.innerText+"&clear=true")
-        .then(response => {
-            // Handle the response
-            if (response.ok) {
-            console.log('Request successful');
-            // Process the response data if needed
-            } else {
-            console.log('Request failed');
-            // Handle the error
-            }
-        })
-        .catch(error => {
-            console.log('An error occurred:', error);
-        });
-
-    }
-    */
+      
     
 
     
@@ -1006,6 +1035,9 @@ table.addEventListener("keydown", function(event) {
                 table.rows[currentRow].cells[0].focus();
                 currentCol=0
                 scrollToBottom();
+
+            
+               
             }
 
             break;
@@ -1018,7 +1050,7 @@ table.addEventListener("keydown", function(event) {
         button.click()
         break;
 
-        case 66: // clear col
+        case 73: // clear col
         event.preventDefault();
         button=document.getElementById('testButton');
         button.click()

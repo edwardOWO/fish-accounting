@@ -419,6 +419,7 @@ func clear(c *gin.Context) {
 
 	//TotalArrears -= fishes[0].PaymentAmount
 
+	result := ""
 	for _, detail := range fishes {
 
 		var count int
@@ -428,7 +429,6 @@ func clear(c *gin.Context) {
 		}
 
 		if count > 0 {
-
 			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ?,PaymentAmount= ? WHERE DataIndex = ? AND Date = ? AND ID = ?",
 				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, "", fishes[0].PaymentAmount, detail.INDEX, t, detail.ID)
 			if err != nil {
@@ -468,7 +468,23 @@ func clear(c *gin.Context) {
 		Imcome += PaymentAmount
 	}
 
-	result := ""
+	if fishes[0].PaymentsResult == "完帳" {
+
+		fishes[0].PaymentAmount = TotalArrears
+
+		Imcome = fishes[0].PaymentAmount
+		// 清空當前帳目狀況
+		_, err = db.Exec("UPDATE Customer  SET   TodayArrears = ?,TotalArrears = ?,Print = ? WHERE ID = ?", 0, 0, true, fishes[0].ID)
+
+		// 設定當前變成以印
+		_, err = db.Exec("UPDATE accountDetail SET  Print = ?,Clear = ? WHERE ID = ?", true, true, fishes[0].ID)
+		if err != nil {
+
+			fmt.Print(err.Error())
+		}
+
+	}
+
 	if fishes[0].PaymentAmount != 0 {
 		result += t.Format("01/02")
 
@@ -667,8 +683,17 @@ func handlePostFish(c *gin.Context) {
 
 		if count > 0 {
 			// 执行更新操作
-			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ? ,PaymentAmount = ? WHERE DataIndex = ? AND Date = ? AND ID=?",
-				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, detail.PaymentsResult, detail.PaymentAmount, detail.INDEX, t, fishes[0].ID)
+			if detail.TotalPrice == 0 {
+				c.JSON(200, gin.H{"message": "Success"})
+				result, err := db.Exec("DELETE from accountDetail WHERE DataIndex = ? AND Date = ? AND ID=? AND Print=? AND Clear=?", detail.INDEX, t, fishes[0].ID, false, false)
+				fmt.Print(err.Error())
+				fmt.Print(result)
+
+			} else {
+				_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ? ,PaymentAmount = ? WHERE DataIndex = ? AND Date = ? AND ID=?",
+					detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, detail.PaymentsResult, detail.PaymentAmount, detail.INDEX, t, fishes[0].ID)
+			}
+
 		} else {
 			// 执行插入操作
 			_, err = db.Exec("INSERT INTO accountDetail (ID, CustomerName, Date, FishName, Weight, Price, Fraction, Package, TotalPrice, Print, DataIndex,PaymentsResult,Clear, PaymentAmount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,0)",
@@ -1246,13 +1271,16 @@ func generatePrintAllHTML(c *gin.Context) {
 	thirdOutput := ""
 	index := 0
 	for rows2.Next() {
-
 		Result := ""
 		rows2.Scan(&Name, &TotalArrears)
 
 		Result += Name
 		Result += ":"
 		Result += strconv.Itoa(TotalArrears)
+
+		if TotalArrears == 0 {
+			continue
+		}
 
 		if index == 0 {
 			firstOutput = Result
