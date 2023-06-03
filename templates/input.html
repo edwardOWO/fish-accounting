@@ -65,21 +65,7 @@
   </head>
   <body>
       <div class="container">
-        <div class="left">
-          <div class="container2">
-            <h5>記帳時間: </h5>
-            <h5 id="currentDate"></h5>
-            <h5>客戶:</h5>
-            <h5 id="customer"></h5>
-            <h5 id="customerID" style="display: none;">客戶ID:</h5>
-            <h5 >當日累計帳款:</h5>
-            <h5 id="current_count"></h5>
-  
-            <h5 >過去累積帳款:</h5>
-            <h5 id="pre_count"></h5>
-            <h5 >還款狀態:</h5>
-            <h5 id="repayment_status"></h5>
-          </div>
+        <div class="left" >
           <table id="myTable">
             <thead>
               <tr>
@@ -104,6 +90,21 @@
               <td contenteditable="false" ></td>
             </tr>
           </table>
+          
+          <div class="container2">
+            <h5>記帳時間: </h5>
+            <h5 id="currentDate"></h5>
+            <h5>客戶:</h5>
+            <h5 id="customer"></h5>
+            <h5 id="customerID" style="display: none;">客戶ID:</h5>
+            <h5 >當日累計帳款:</h5>
+            <h5 id="current_count"></h5>
+  
+            <h5 >過去累積帳款:</h5>
+            <h5 id="pre_count"></h5>
+            <h5 >還款狀態:</h5>
+            <h5 id="repayment_status"></h5>
+          </div>
           <pre>(s/下一位 i/還帳 2/小 3/大 b/2小 c/2大 5/清)</pre>
           <button id="myButton" style="display: none;">儲存表單</button>
           <button id="PrintAndClose" style="display: none;">印帳單後更新結帳</button>

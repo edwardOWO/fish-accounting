@@ -264,7 +264,8 @@ window.onload = function() {
     loadPage()
 
     PrintFish()
-
+    
+    window.scrollTo(0, 0);
 };
 
 

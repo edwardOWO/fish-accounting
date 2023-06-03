@@ -423,7 +423,15 @@ func clear(c *gin.Context) {
 	for _, detail := range fishes {
 
 		var count int
-		err := db.QueryRow("SELECT COUNT(*) FROM accountDetail WHERE DataIndex = ? AND Date = ? AND ID = ?", detail.INDEX, t, detail.ID).Scan(&count)
+		err := db.QueryRow("SELECT COUNT(*) FROM accountDetail WHERE Clear=? and ID=?", false, detail.ID).Scan(&count)
+
+		// 目前尚未有欠款故直接結束
+		if count == 0 {
+
+			return
+		}
+
+		err = db.QueryRow("SELECT COUNT(*) FROM accountDetail WHERE DataIndex = ? AND Date = ? AND ID = ?", detail.INDEX, t, detail.ID).Scan(&count)
 		if err != nil {
 			count = 1
 		}
@@ -446,7 +454,6 @@ func clear(c *gin.Context) {
 
 	}
 
-	//rows, err := db.Query(`select TotalPrice from  accountDetail WHERE  ID=? and Date=? and Clear=false`, fishes[0].ID, t)
 	rows, err := db.Query(`select TotalPrice,PaymentAmount from  accountDetail WHERE  ID=? and Clear=false`, fishes[0].ID)
 	if err != nil {
 		log.Fatal(err)
@@ -1396,7 +1403,7 @@ func generatePrintDetail(c *gin.Context) {
 			Income += fish.PaymentAmount
 
 			if index == 0 {
-				WriteToFile("fish.txt", "<pre class=\"shorten-distance\">-----------------------------------------------</pre>")
+				//WriteToFile("fish.txt", "<pre class=\"shorten-distance\">-----------------------------------------------</pre>")
 				WriteToFile("fish.txt", "<h2 class=\"shorten-distance2\">")
 				WriteToFile("fish.txt", fish.CustomerName)
 				WriteToFile("fish.txt", "</h2>")
