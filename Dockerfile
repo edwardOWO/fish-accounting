@@ -1,5 +1,6 @@
-From mcr.microsoft.com/devcontainers/go:0-1.18
+From debian:latest
 ADD templates templates
-ADD fish fish
+ADD templates templates
+ADD script script
 RUN mkdir /data
 CMD ./fish
