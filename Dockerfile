@@ -1,5 +1,6 @@
+#docker build -t yusongwang1991/fish-accounting:v1 .
 From debian:latest
-ADD templates templates
+ADD fish fish
 ADD templates templates
 ADD script script
 RUN mkdir /data
