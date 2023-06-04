@@ -60,7 +60,7 @@ type Product struct {
 	Key  string `json:"key"`
 }
 
-var DB_Name = "test.sqlite"
+var DB_Name = "/data/fish.sqlite"
 
 func init_db() {
 	db, err := sql.Open("sqlite3", DB_Name)
