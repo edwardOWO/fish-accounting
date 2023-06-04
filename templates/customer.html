@@ -1,11 +1,150 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-    <meta charset="UTF-8">
-    <title>客戶建檔</title>
+    <title>新增客戶</title>
 </head>
+<style>
+    table {
+        border-collapse: collapse;
+        white-space: nowrap;
+    }
+
+    .highlight {
+        background-color: yellow;
+    }
+
+    td {
+        border: 1px solid black;
+        padding: 5px;
+        text-align: center;
+        width: 50px;
+    }
+
+    td:focus {
+        outline: none;
+        background-color: yellow;
+    }
+
+    body {
+        background-color: #acacdb;
+    }
+
+    .container2 {
+        display: flex;
+        flex-direction: row;
+        white-space: nowrap;
+    }
+
+    .container {
+        display: flex;
+        flex-direction: row;
+        white-space: nowrap;
+    }
+
+    h5 {
+        margin-right: 10px;
+    }
+
+    h4 {
+        margin-right: 1px;
+    }
+
+    .left {
+        flex: 1;
+        /* 佔用父元素寬度的 2/3 */
+        background-color: #acacdb;
+    }
+
+    .right {
+        flex: 1;
+        background-color: #acacdb;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        overflow-y: auto;
+    }
+</style>
+
 <body>
-    <!-- 在這裡放置網頁內容 -->
-    <p>客戶建檔</p>
+    <table id="myTable"></table>
+    <h5>客戶新增</h5>
+
+    <label>用户名：</label>
+    <input type="text" id="name" name="username" placeholder="请输入用户名"><br>
+
+    <button id="submitBtn">提交</button>
+
+    <script>
+        window.onload = function () {
+            loadPage()
+        };
+        // 在这里可以添加JavaScript代码来处理按钮的点击事件或执行其他操作
+        document.getElementById("submitBtn").addEventListener("click", function () {
+            var name = document.getElementById("name").value;
+            url = "/addNewCustomer?name="
+            url += name
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url);
+            xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        alert("新增成功")
+                        window.location.reload();
+                    } else {
+                        alert("新增失敗")
+                        window.location.reload();
+                    }
+                }
+            };
+
+            xhr.send();
+        });
+
+        function loadPage() {
+            const url = "/get_customer_name";
+            const table = document.getElementById("myTable");
+            let currentX = 0;
+            let currentY = 0;
+            fetch(url)
+                .then((response) => response.json())
+                .then((data) => {
+                    let i = 0;
+                    while (i < data.length) {
+                        const tr = document.createElement("tr");
+                        for (let j = 0; j < 10; j++) {
+                            if (i >= data.length) {
+                                break;
+                            }
+                            const td = document.createElement("td");
+                            //td.innerText = data[i].name;
+                            // 暫存 ID
+                            const tempSpan0 = document.createElement("span0");
+                            tempSpan0.innerText = data[i].id;
+                            tempSpan0.style.display = "none";
+                            td.append(tempSpan0);
+                            // 暫存名字 ID
+                            const tempSpan1 = document.createElement("span1");
+                            tempSpan1.innerText = data[i].name;
+                            td.append(tempSpan1);
+                            // 暫存排序 Sort
+                            const tempSpan2 = document.createElement("span2");
+                            tempSpan2.innerText = "";
+                            td.append(tempSpan2);
+                            tr.appendChild(td);
+                            i++;
+                        }
+                        table.appendChild(tr);
+                    }
+                    table.rows[currentY].cells[currentX].classList.add("focus");
+                    window.addEventListener("keydown", handleKeyDown);
+                });
+        }
+    </script>
+
 </body>
+
 </html>

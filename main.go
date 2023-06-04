@@ -252,7 +252,7 @@ func main() {
 	// 產生列印檔案
 	router.POST("/print", generatePrintDetail)
 
-	// 產生列印檔案
+	// 產生總帳列印檔案
 	router.GET("/printAllaccount", generatePrintAllHTML)
 
 	// 帳目狀況
@@ -278,6 +278,9 @@ func main() {
 	// 輸入帳目資料
 	router.POST("/accountDetail", handlePostFish)
 
+	// 刪除帳目資料
+	router.POST("/delete_accountDetail", handleDeletePostFish)
+
 	// 輸入帳目資料
 	router.POST("/payment", payment)
 
@@ -292,6 +295,9 @@ func main() {
 
 	// 還帳目
 	router.POST("/clear", clear)
+
+	// 新增客戶
+	router.POST("/addNewCustomer", addNewCustomer)
 
 	// 選擇今天客戶
 	router.POST("/set_today_customer_name", set_today_customer_name)
@@ -503,7 +509,7 @@ func clear(c *gin.Context) {
 
 	}
 
-	_, err = db.Exec("UPDATE accountDetail SET PaymentsResult= ? WHERE DataIndex = ? AND Date = ?", result, fishes[0].INDEX, t)
+	_, err = db.Exec("UPDATE accountDetail SET PaymentsResult= ? WHERE DataIndex = ? AND Date = ? AND ID = ?", result, fishes[0].INDEX, t, fishes[0].ID)
 	if err != nil {
 		fmt.Print(err.Error())
 	}
@@ -645,6 +651,40 @@ func next_customer(c *gin.Context) {
 	}
 }
 
+func handleDeletePostFish(c *gin.Context) {
+	// 更新客戶資料
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	// 更新今日詳細帳目
+	var fishes []Fish
+	if err := c.BindJSON(&fishes); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	layout := "2006-01-02"
+	// 解析日期字符串
+
+	day := ""
+	day = fishes[0].Date
+
+	t, err := time.Parse(layout, day)
+	if err != nil {
+		fmt.Println("解析错误:", err)
+		return
+	} // 解析日期字符串
+
+	_, err = db.Exec("DELETE from accountDetail WHERE DataIndex = ? AND Date = ? AND ID=? AND Print=? AND Clear=?", fishes[0].INDEX, t, fishes[0].ID, false, false)
+	if err != nil {
+
+		fmt.Print(err.Error())
+	}
+
+}
+
 func handlePostFish(c *gin.Context) {
 	// 更新客戶資料
 	db, err := sql.Open("sqlite3", DB_Name)
@@ -689,17 +729,9 @@ func handlePostFish(c *gin.Context) {
 		}
 
 		if count > 0 {
-			// 执行更新操作
-			if detail.TotalPrice == 0 {
-				c.JSON(200, gin.H{"message": "Success"})
-				result, err := db.Exec("DELETE from accountDetail WHERE DataIndex = ? AND Date = ? AND ID=? AND Print=? AND Clear=?", detail.INDEX, t, fishes[0].ID, false, false)
-				fmt.Print(err.Error())
-				fmt.Print(result)
 
-			} else {
-				_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ? ,PaymentAmount = ? WHERE DataIndex = ? AND Date = ? AND ID=?",
-					detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, detail.PaymentsResult, detail.PaymentAmount, detail.INDEX, t, fishes[0].ID)
-			}
+			_, err = db.Exec("UPDATE accountDetail SET ID = ?, CustomerName = ?, FishName = ?, Weight = ?, Price = ?, Fraction = ?, Package = ?, TotalPrice = ?, Print = ?,Clear = ?, PaymentsResult = ? ,PaymentAmount = ? WHERE DataIndex = ? AND Date = ? AND ID=?",
+				detail.ID, detail.CustomerName, detail.FishName, detail.Weight, detail.Price, detail.Fraction, detail.Package, detail.TotalPrice, false, detail.Clear, detail.PaymentsResult, detail.PaymentAmount, detail.INDEX, t, fishes[0].ID)
 
 		} else {
 			// 执行插入操作
@@ -751,6 +783,54 @@ func payment(c *gin.Context) {
 			log.Fatal(err)
 		}
 	*/
+}
+
+// 新增客戶
+func addNewCustomer(c *gin.Context) {
+
+	name := c.Query("name")
+
+	if name == "" {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM Customer where name=?", name).Scan(&count)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	if count > 0 {
+		// 重複姓名
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	err = db.QueryRow("SELECT COUNT(*) FROM Customer").Scan(&count)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	count += 1
+	_, err = db.Exec("INSERT INTO Customer (ID, Name,TotalArrears,TodayArrears,Print)  VALUES (?,?,?,?,?)", count, name, 0, 0, false)
+	if err != nil {
+		fmt.Print(err.Error())
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	c.Status(http.StatusOK)
+
 }
 
 // 讀取所有客戶

@@ -1051,15 +1051,63 @@ table.addEventListener("keydown", function(event) {
         button.click()
         break;
 
-        case 73: // clear col
+        case 73: // 使用 i 進行環款
         event.preventDefault();
         button=document.getElementById('testButton');
         button.click()
         break;
 
+        case 70: // 使用 f 進行環款
+            if (currentCol == 0){
+                checkdelete = prompt("1)刪除 2)取消", 2);
+                temp=table.rows[currentRow].cells[0].innerText
+                if (checkdelete =="2"){
+                    window.location.reload();
+                    break
+                }else if(checkdelete=="1"){
+
+                    const data = [];
+                    var customerID = document.getElementById("customerID");
+                    id = customerID.innerText;
+                    var customer = document.getElementById("customer");
+                    customerName = customer.innerText;
+
+                    data.push({
+                        id: parseInt(id),
+                        date: table.rows[currentRow].cells[0].innerHTML,
+                        fishName: table.rows[currentRow].cells[1].innerHTML,
+                        weight: parseFloat(table.rows[currentRow].cells[2].innerHTML),
+                        price: parseInt(table.rows[currentRow].cells[3].innerHTML),
+                        fraction: parseFloat(table.rows[currentRow].cells[4].innerHTML),
+                        package: table.rows[currentRow].cells[5].innerHTML,
+                        totalPrice: parseInt(table.rows[currentRow].cells[6].innerHTML),
+                        customerName: customerName,
+                        index: parseInt(table.rows[currentRow].cells[7].innerHTML),
+                        paymentsresult: "",
+                        paymentamount: parseInt(0),
+                        Clear: false,
+                        });
+
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', '/delete_accountDetail');
+                    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+                    xhr.send(JSON.stringify(data));
+                
+                    var customer = document.getElementById("customer");
+
+                    alert("刪除成功")
+                    window.location.reload();
+                }
+            }
+        break;
+
 
         case 27: // clear col
-        alert(27)
+       
+            alert(27)
+        
+       
+          
         break;
     }
 });
