@@ -1392,7 +1392,9 @@ func generatePrintAllHTML(c *gin.Context) {
 		}
 
 	}
-	paddedStr := fmt.Sprintf("%-10s %-10s %-10s", firstOutput, secondOutput, thirdOutput)
+
+	paddedStr := fmt.Sprintf("%-20s        %-20s        %-20s", firstOutput, secondOutput, thirdOutput)
+
 	WriteToFile("templates/print_allaccount.html", paddedStr)
 
 	tmpl := template.Must(template.ParseFiles("templates/print_allaccount.html"))

@@ -76,15 +76,22 @@
           }
         }
       }
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/print');
-      xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-      xhr.send(JSON.stringify(data));
+
+      if (data.length>0){
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/print');
+        xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+        xhr.send(JSON.stringify(data));
+        alert("小單字產生完成")
+      }else{
+        alert("未選取客戶")
+      }
+
       //alert("選取 " + custome_index + "位客戶,轉跳到輸入頁面")
       //window.open("http://127.0.0.1:8080/print", "_blank");
 
       
-      alert("小單字產生完成")
+      
     };
 
     myButton2.onclick = function() {
@@ -129,8 +136,10 @@
 
               if (data[i].print ==true){
                 todayArrears+=" E"
+                tempSpan1.style.color = "black";
               }else {
                 todayArrears+=" "
+                tempSpan1.style.color = "blue";
               }
 
 
