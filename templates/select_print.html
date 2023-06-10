@@ -64,6 +64,11 @@
             tempSpan0 = cells[j].querySelector('span0');
             tempSpan1 = cells[j].querySelector('span1');
             tempSpan2 = cells[j].querySelector('span2');
+
+            if (tempSpan0 == null){
+              continue
+            }
+
             data.push({
               id: parseInt(tempSpan0.innerText),
               name: tempSpan1.innerText,
@@ -151,6 +156,10 @@
               tempSpan2.innerText = "";
               td.append(tempSpan2);
               tr.appendChild(td);
+              }else{
+                const td = document.createElement("td");
+                tr.appendChild(td);
+
               }
               i++;
             
