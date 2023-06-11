@@ -37,14 +37,17 @@
   <div>
     <h>列印日期:</h>
     <h id="currentDate">列印日期:</h>
+    <br></br>
+    <h id="sum">帳款總金額:</h>
   </div>
-  <table id="myTable"></table>
-  <button id="myButton" style="display: none;">列印小單子</button>
-  <button id="myButton2" style="display: none;">列印總帳單</button>
   <br></br>
   <a href="http://127.0.0.1:8080/print" id="link" target="_blank">小單子的頁面</a>
   <br></br>
   <a href="http://127.0.0.1:8080/printAllaccount" id="link" target="_blank">總帳單的頁面</a>
+  <table id="myTable"></table>
+  <button id="myButton" style="display: none;">列印小單子</button>
+  <button id="myButton2" style="display: none;">列印總帳單</button>
+  
   <script>
     let custome_index = 0;
     myButton.onclick = function() {
@@ -110,6 +113,7 @@
     const table = document.getElementById("myTable");
     let currentX = 0;
     let currentY = 0;
+    let sum=0;
     fetch(url)
       .then((response) => response.json())
       .then((data) => {
@@ -123,7 +127,8 @@
 
               if (data[i].todayArrears >0){
               //alert("test")
-              
+            
+              sum+=data[i].todayArrears
             
               const td = document.createElement("td");
               //td.innerText = data[i].name;
@@ -168,6 +173,10 @@
         }
         table.rows[currentY].cells[currentX].classList.add("focus");
         window.addEventListener("keydown", handleKeyDown);
+
+        sum_label = document.getElementById("sum");
+        sum_label.innerText+=sum
+        //alert(sum)
       });
 
     function handleKeyDown(event) {

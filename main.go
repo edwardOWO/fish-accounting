@@ -686,6 +686,22 @@ func handleRestorePostFish(c *gin.Context) {
 
 	fmt.Print(t)
 
+	// 將所有的帳目設定成完帳狀態
+	_, err = db.Exec("UPDATE accountDetail SET Clear = true where Date <= ? AND ID=?", t, fishes[0].ID)
+	if err != nil {
+
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 將共帳資料設定金額,並設定人名
+	_, err = db.Exec("UPDATE accountDetail SET Clear = false,TotalPrice= ?,CustomerName= ? where Date = ? AND ID=? AND DataIndex = 999", fishes[0].TotalPrice, fishes[0].CustomerName, t, fishes[0].ID)
+	if err != nil {
+
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
 	// 將所有的帳目更新為未完成,並且設定成未列印狀態
 	_, err = db.Exec("UPDATE accountDetail SET Clear = false,Print = false where Date > ? AND ID=?", t, fishes[0].ID)
 	if err != nil {
@@ -1702,7 +1718,7 @@ func generatePrintDetail(c *gin.Context) {
 
 		detail := Fish{}
 		detail.ID = id
-		detail.CustomerName = ""
+		detail.CustomerName = customer.Name
 		detail.Date = formattedTime
 		detail.FishName = ""
 		detail.Fraction = float32(0)
