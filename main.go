@@ -281,6 +281,9 @@ func main() {
 	// 刪除帳目資料
 	router.POST("/delete_accountDetail", handleDeletePostFish)
 
+	// 還原帳目資料
+	router.POST("/restore_accountDetail", handleRestorePostFish)
+
 	// 輸入帳目資料
 	router.POST("/payment", payment)
 
@@ -649,6 +652,70 @@ func next_customer(c *gin.Context) {
 
 		fmt.Print(err.Error())
 	}
+}
+func handleRestorePostFish(c *gin.Context) {
+
+	restore := c.Query("restore")
+
+	fmt.Print(restore)
+
+	// 更新客戶資料
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	// 更新今日詳細帳目
+	var fishes []Fish
+	if err := c.BindJSON(&fishes); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	layout := "2006-01-02"
+	// 解析日期字符串
+
+	day := ""
+	day = fishes[0].Date
+
+	t, err := time.Parse(layout, day)
+	if err != nil {
+		fmt.Println("解析错误:", err)
+		return
+	} // 解析日期字符串
+
+	fmt.Print(t)
+
+	// 將所有的帳目更新為未完成,並且設定成未列印狀態
+	_, err = db.Exec("UPDATE accountDetail SET Clear = false,Print = false where Date > ? AND ID=?", t, fishes[0].ID)
+	if err != nil {
+
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 刪除還賬
+	_, err = db.Exec("DELETE from accountDetail WHERE DataIndex = 999 AND Date > ? AND ID=?", t, fishes[0].ID)
+	if err != nil {
+
+		fmt.Print(err.Error())
+	}
+
+	// 刪除共帳
+	_, err = db.Exec("DELETE from accountDetail WHERE DataIndex = 0 AND Date > ? AND ID=?", t, fishes[0].ID)
+	if err != nil {
+
+		fmt.Print(err.Error())
+	}
+
+	// 更新成為未印,更新使用者帳款
+	_, err = db.Exec("UPDATE Customer SET TotalArrears = ? ,TodayArrears = ? ,Print = false WHERE ID = ?", fishes[0].TotalPrice, fishes[0].TotalPrice, fishes[0].ID)
+	if err != nil {
+
+		fmt.Print(err.Error())
+	}
+
+	c.JSON(200, gin.H{"success": "0"})
 }
 
 func handleDeletePostFish(c *gin.Context) {

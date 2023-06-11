@@ -1057,7 +1057,7 @@ table.addEventListener("keydown", function(event) {
         button.click()
         break;
 
-        case 70: // 使用 f 進行環款
+        case 70: // 使用 f 進行刪除帳目
             if (currentCol == 0){
                 checkdelete = prompt("1)刪除 2)取消", 2);
                 temp=table.rows[currentRow].cells[0].innerText
@@ -1101,13 +1101,62 @@ table.addEventListener("keydown", function(event) {
             }
         break;
 
+        case 85: // clear col
+        if (currentCol == 0){
+            checkrestore = prompt("1)還原 2)取消", 2);
+
+            text=table.rows[currentRow].cells[1].innerText
+            if (checkrestore=="1"){
+                if (text.toLowerCase().includes("共".toLowerCase())) {
+
+                    const match = text.match(/共:(\d+)/);
+                    if (match) {
+                        const number = parseInt(match[1]);
+                        const data = [];
+                        var customerID = document.getElementById("customerID");
+                        id = customerID.innerText;
+                        var customer = document.getElementById("customer");
+                        customerName = customer.innerText;
+
+                        data.push({
+                            id: parseInt(id),
+                            date: table.rows[currentRow].cells[0].innerHTML,
+                            fishName: "",
+                            weight: 0,
+                            price: 0,
+                            fraction: 0,
+                            package: "",
+                            totalPrice: number,
+                            customerName: customerName,
+                            index: 0,
+                            paymentsresult: "",
+                            paymentamount: 0,
+                            Clear: false,
+                            });
+
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('POST', '/restore_accountDetail');
+                        xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+                        xhr.send(JSON.stringify(data));
+                        
+                    } else {
+                        alert("未找到數字");
+                    }
+                    
+                    alert("開始還原")
+                } else {
+                    alert("無法還原")
+                }
+                window.location.reload();
+            }else{
+                alert("還原取消")
+                window.location.reload();
+            }
+        }
+        break;
 
         case 27: // clear col
-       
-            alert(27)
-        
-       
-          
+            alert(444)  
         break;
     }
 });
