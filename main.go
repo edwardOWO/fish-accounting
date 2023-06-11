@@ -1399,6 +1399,13 @@ func generatePrintAllHTML(c *gin.Context) {
 		Result := ""
 		rows2.Scan(&Name, &TotalArrears)
 
+		if len(Name) == 3 {
+			Name += "　　"
+		}
+		if len(Name) == 6 {
+			Name += "　"
+		}
+
 		Result += Name
 		Result += ":"
 		Result += strconv.Itoa(TotalArrears)
@@ -1552,8 +1559,17 @@ func generatePrintDetail(c *gin.Context) {
 					// 格式化日期为 MM/DD
 					format := "01/02"
 					formattedDate := date.Format(format)
+					fishNameString := ""
 
-					paddedStr := fmt.Sprintf("%-5s %-3s %-6s %-4s %-3s %-4s", formattedDate, fish.FishName, strconv.FormatFloat(float64(fish.Weight), 'f', -1, 32)+"k", strconv.Itoa(fish.Price), strconv.FormatFloat(float64(fish.Fraction), 'f', -1, 32), strconv.Itoa(fish.TotalPrice))
+					fmt.Print(len(fish.FishName))
+
+					if len(fish.FishName) == 3 {
+						fishNameString = fish.FishName + "　"
+					} else {
+						fishNameString = fish.FishName
+					}
+
+					paddedStr := fmt.Sprintf("%-5s %-1s %-6s %-4s %-3s %-4s", formattedDate, fishNameString, strconv.FormatFloat(float64(fish.Weight), 'f', -1, 32)+"k", strconv.Itoa(fish.Price), strconv.FormatFloat(float64(fish.Fraction), 'f', -1, 32), strconv.Itoa(fish.TotalPrice))
 					index++
 					WriteToFile("fish.txt", paddedStr)
 				}
