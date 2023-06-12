@@ -331,6 +331,10 @@ func main() {
 		c.HTML(http.StatusOK, "select_customer.html", gin.H{})
 	})
 
+	// 讀取客戶當前帳款額
+
+	router.GET("/get_customer_todayArrears", get_customer_todayArrears)
+
 	router.Run(":8080")
 }
 
@@ -1181,6 +1185,52 @@ func get_customer_account_result(c *gin.Context) {
 
 	c.JSON(http.StatusOK, get_customer_account_result)
 
+}
+func get_customer_todayArrears(c *gin.Context) {
+
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	id := c.Query("id")
+	date := c.Query("date")
+	TotalArrears := 0
+	Income := 0
+
+	if date == "" {
+		// 未繳清的總帳款-負帳款=客戶當前的帳款總額
+		rows, err := db.Query("SELECT TotalPrice,PaymentAmount  FROM accountDetail WHERE ID=? AND clear=false", id)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			_TotalPrice := 0
+			_PaymentAmount := 0
+			err = rows.Scan(&_TotalPrice, &_PaymentAmount)
+			TotalArrears += _TotalPrice
+			Income += _PaymentAmount
+		}
+		TotalArrears -= Income
+	} else {
+		date += " 00:00:00+00:00"
+		rows, err := db.Query("SELECT TotalPrice  FROM accountDetail WHERE  Date= ?", date)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			_TotalPrice := 0
+			err = rows.Scan(&_TotalPrice)
+			TotalArrears += _TotalPrice
+		}
+	}
+
+	c.JSON(http.StatusOK, TotalArrears)
 }
 
 func get_today_customer_name(c *gin.Context) {

@@ -39,6 +39,8 @@
     <h id="currentDate">列印日期:</h>
     <br></br>
     <h id="sum">欠款總額:</h>
+    <br></br>
+    <h id="today_sum">今日帳款總額:</h>
   </div>
   <br></br>
   <a href="http://127.0.0.1:8080/print" id="link" target="_blank">小單子的頁面</a>
@@ -179,6 +181,10 @@
         //alert(sum)
       });
 
+    
+
+
+
     function handleKeyDown(event) {
       switch (event.key) {
         case "Escape":
@@ -249,6 +255,19 @@
         const currentDate = document.getElementById("currentDate");
         alert("記帳日期為：" + userInput);
         currentDate.innerText = userInput
+
+        fetch('/get_customer_todayArrears' + "?date=" + currentDate.innerText)
+        .then(response => response.text()) 
+        .then(data => {
+          const intValue = parseInt(data);
+          today_sum = document.getElementById("today_sum");
+          today_sum.innerText+=intValue;
+        })
+        .catch(error => {
+          // 處理錯誤
+        });
+
+
       }
     }
     window.onload = function() {
@@ -272,6 +291,8 @@
           }
           
         });
+
+
 
 
       
