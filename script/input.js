@@ -6,6 +6,21 @@ let currentRow = 2;
 let currentCol = 0;
 let data_index=0;
 
+function loadCustomerSum(){
+    customerID2 = document.getElementById("customerID");
+    id = customerID2.innerText;
+    fetch('/get_customer_todayArrears' + "?id=" + id)
+    .then(response => response.text()) 
+    .then(data => {
+      const intValue = parseInt(data);
+      current_count = document.getElementById("current_count");
+      current_count.innerText=intValue;
+    })
+    .catch(error => {
+      // 處理錯誤
+    });
+}
+
 function loadPage(){
 
     var table = document.getElementById("myTable");
@@ -46,6 +61,9 @@ function loadPage(){
             customerID.innerText=data[i].id
             userid=data[i].id
             userDate=new Date(data[i].date)
+
+            // 取得當前計算金額
+            
         }
             //var url = "/accountDetail?id=" + table_select_id.innerText
         // 新增下一列,繼續進行運作
@@ -79,7 +97,7 @@ function loadPage(){
             repayment_status.style.color="red"
         }
 
-
+        loadCustomerSum()
     })
     .catch(error => console.error()); // 若發生錯誤則顯示錯誤訊息
     })
@@ -264,8 +282,6 @@ window.onload = function() {
     loadPage()
 
     PrintFish()
-
-    
     
     window.scrollTo(0, document.body.scrollHeight);
     //window.scrollTo(0, 0);
@@ -956,6 +972,7 @@ table.addEventListener("keydown", function(event) {
 
                 table.rows[currentRow].cells[6].innerHTML = result
 
+                
 
                 // 索引 +1
                 data_index++;
@@ -966,26 +983,13 @@ table.addEventListener("keydown", function(event) {
                 
                 
                 // 每次進行計算後累積當前結果
-                sum=0
 
-                for (i=0 ;i<table.rows.length;i++){
-                    
-                    if (table.rows[i].querySelectorAll('td').length>2){
-
-                    
-                        var isNumeric = !isNaN(table.rows[i].cells[6].innerText);
-                        if (isNumeric){
-                            sum+=Math.round(table.rows[i].cells[6].innerText)
-                        }
-                    }
-                    
-                }
-
-               
+                current_count = document.getElementById("current_count");
+                let num = parseFloat(current_count.innerText);
+                num+=result
+                current_count.innerText=num;
                 
-                current_count.innerHTML=sum
-
-
+                
                 // 將該行資料庫寫入
                 const data = [];
                 var customerID = document.getElementById("customerID");
@@ -1040,6 +1044,7 @@ table.addEventListener("keydown", function(event) {
                 table.rows[currentRow].cells[0].focus();
                 currentCol=0
                 scrollToBottom();
+                //loadCustomerSum()
 
             
                
