@@ -23,13 +23,13 @@
 <body>
 	
 <h2 class="shorten-distance2">
-陳笨豬
+旺哥
 </h2>
 <pre class="text-content">
-06/04 赤宗  10k    10   1   111 
-
-
-
+前帳: 2130
+06/13 入=1000 欠=1130
+06/13 熟卷 10k    100  1   1065
+06/13 草魚 20k    100  1   2125
 
 
 
@@ -41,7 +41,7 @@
 
 
 </pre>
-<h4>盛: 111</h4>
+<h4>盛: 4320</h4>
 <pre class="shorten-distance">-----------------------------------------------</pre>
 
 	<button onclick="window.print()">列印文字</button>

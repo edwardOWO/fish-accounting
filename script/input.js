@@ -264,8 +264,11 @@ window.onload = function() {
     loadPage()
 
     PrintFish()
+
     
-    window.scrollTo(0, 0);
+    
+    window.scrollTo(0, document.body.scrollHeight);
+    //window.scrollTo(0, 0);
 };
 
 
@@ -541,6 +544,7 @@ testButton.onclick = function(){
             xhr.send(JSON.stringify(data));
             data_index++;
             window.location.reload();
+            
     }
 }
 function showPrompt() {
@@ -960,7 +964,7 @@ table.addEventListener("keydown", function(event) {
                 }
 
                 
-
+                
                 // 每次進行計算後累積當前結果
                 sum=0
 
