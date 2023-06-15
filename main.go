@@ -1596,7 +1596,7 @@ func generatePrintDetail(c *gin.Context) {
   <style>
     .text-content {
       white-space: pre;
-      font-size: 15px;
+      font-size: 17px;
 	  margin-top: -15px; /* 调整顶部边距 */
     }
 	.shorten-distance {
@@ -1710,12 +1710,12 @@ func generatePrintDetail(c *gin.Context) {
 
 		}
 
-		if index <= 14 {
+		if index <= 12 {
 
-			for i := 1; i <= 14-index; i++ {
+			for i := 1; i <= 12-index; i++ {
 				WriteToFile("fish.txt", "")
 			}
-			index = 14
+			index = 12
 		}
 
 		WriteToFile("fish.txt", "</pre>")
@@ -1788,7 +1788,7 @@ func generatePrintDetail(c *gin.Context) {
 
 		sum_index += index
 
-		if sum_index > 29 {
+		if sum_index > 24 {
 			sum_index = 0
 			WriteToFile("fish.txt", "<div style=\"page-break-before: always;\"></div>")
 		}
