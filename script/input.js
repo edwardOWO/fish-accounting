@@ -972,13 +972,30 @@ table.addEventListener("keydown", function(event) {
 
                 table.rows[currentRow].cells[6].innerHTML = result
 
-                
+
+
+                currentDate = document.getElementById("currentDate");
+
+                if (currentRow>1){
+                    if (currentDate.innerText != table.rows[currentRow-1].cells[0].innerText){
+                        data_index=1
+                    }else{
+                        data_index++;
+                    }
+                }else{
+                    data_index++;
+                }
 
                 // 索引 +1
-                data_index++;
+                
+
+                
+
                 if (table.rows[currentRow].cells[7].innerHTML=="") {
                     table.rows[currentRow].cells[7].innerHTML = data_index;
                 }
+
+                
 
                 
                 
