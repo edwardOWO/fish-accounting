@@ -976,8 +976,8 @@ table.addEventListener("keydown", function(event) {
 
                 currentDate = document.getElementById("currentDate");
 
-                if (currentRow>2){
-                    if (currentDate.innerText != table.rows[currentRow-2].cells[0].innerText){
+                if (currentRow>1){
+                    if ((table.rows[currentRow-1].cells[1].innerText).length>=3){
                         data_index=1
                     }else{
                         data_index++;

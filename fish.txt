@@ -23,11 +23,11 @@
 <body>
 	
 <h2 class="shorten-distance2">
-旺哥
+足
 </h2>
 <pre class="text-content">
-06/17 熟卷 20k    10   1   217 
-06/17 熟卷 20k    10   1   217 
+06/18 熟卷 20k    10   1   217 
+06/18 草魚 30k    10   1   323 
 
 
 
@@ -39,84 +39,7 @@
 
 
 </pre>
-<h4>盛: 434</h4>
-<pre class="shorten-distance">-----------------------------------------------</pre>
-<h2 class="shorten-distance2">
-阿彬
-</h2>
-<pre class="text-content">
-06/17 熟卷 20k    10   1   217 
-06/17 草魚 50k    20   10  10650
-
-
-
-
-
-
-
-
-
-
-</pre>
-<h4>盛: 10867</h4>
-<pre class="shorten-distance">-----------------------------------------------</pre>
-<h2 class="shorten-distance2">
-鄭
-</h2>
-<pre class="text-content">
-06/17 白北 30k    10   100 32300
-06/17 草魚 50k    10   200 107000
-
-
-
-
-
-
-
-
-
-
-</pre>
-<h4>盛: 139300</h4>
-<pre class="shorten-distance">-----------------------------------------------</pre>
-<div style="page-break-before: always;"></div>
-<h2 class="shorten-distance2">
-蕭
-</h2>
-<pre class="text-content">
-06/17 草魚 30k    20   10  6410
-06/17 白北 30k    10   1   323 
-
-
-
-
-
-
-
-
-
-
-</pre>
-<h4>盛: 6733</h4>
-<pre class="shorten-distance">-----------------------------------------------</pre>
-<h2 class="shorten-distance2">
-阿仁
-</h2>
-<pre class="text-content">
-06/17 白北 30k    10   1   323 
-
-
-
-
-
-
-
-
-
-
-
-</pre>
-<h4>盛: 323</h4>
+<h4>盛: 540</h4>
 <pre class="shorten-distance">-----------------------------------------------</pre>
 
 	<button onclick="window.print()">列印文字</button>
