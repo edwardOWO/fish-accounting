@@ -1489,6 +1489,14 @@ func generatePrintHTML(c *gin.Context) {
 		log.Fatal(err)
 	}
 	WriteToFile("templates/print.html", string(content))
+
+	currentTime := time.Now()
+	outputPath := "/data/"
+	dateString := currentTime.Format("2006-01-02-15-04-05")
+	outputPath += dateString
+	outputPath += ".html"
+
+	WriteToFile(outputPath, string(content))
 	// 定義模板
 	tmpl := template.Must(template.ParseFiles("templates/print.html"))
 
@@ -1516,7 +1524,7 @@ func generatePrintAllHTML(c *gin.Context) {
 
 	os.Truncate("templates/print_allaccount.html", 0)
 
-	rows2, err := db.Query(`select Name,TotalArrears  from  Customer  WHERE  Print=?`, true)
+	rows2, err := db.Query(`select Name,TotalArrears  from  Customer  WHERE  TotalArrears>0`)
 	if err != nil {
 		log.Fatal(err)
 	}

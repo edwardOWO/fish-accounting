@@ -23,11 +23,11 @@
 <body>
 	
 <h2 class="shorten-distance2">
-足
+曹
 </h2>
 <pre class="text-content">
-06/18 熟卷 20k    10   1   217 
-06/18 草魚 30k    10   1   323 
+前帳: 969
+
 
 
 
@@ -39,7 +39,7 @@
 
 
 </pre>
-<h4>盛: 540</h4>
+<h4>盛: 969</h4>
 <pre class="shorten-distance">-----------------------------------------------</pre>
 
 	<button onclick="window.print()">列印文字</button>

@@ -3,6 +3,7 @@
 #docker build -t yusongwang1991/fish-accounting:20230617v1 .
 #docker build -t yusongwang1991/fish-accounting:20230617v2 .
 #docker build -t yusongwang1991/fish-accounting:20230617v4 .
+#docker build -t yusongwang1991/fish-accounting:20230625v1 .
 
 From debian:latest
 ADD fish fish
