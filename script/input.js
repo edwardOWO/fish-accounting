@@ -1181,6 +1181,70 @@ table.addEventListener("keydown", function(event) {
         }
         break;
 
+        case 88: // 刪除帳目
+        if (currentCol == 0){
+            checkrDelete = prompt("1)刪除舊帳 2)取消", 2);
+
+            text=table.rows[currentRow].cells[1].innerText
+            if (checkrDelete=="1"){
+                if (text.toLowerCase().includes("共".toLowerCase())) {
+
+                    const match = text.match(/共:(\d+)/);
+                    if (match) {
+                        const number = parseInt(match[1]);
+                        const data = [];
+                        var customerID = document.getElementById("customerID");
+                        id = customerID.innerText;
+                        var customer = document.getElementById("customer");
+                        customerName = customer.innerText;
+
+                        data.push({
+                            id: parseInt(id),
+                            date: table.rows[currentRow].cells[0].innerHTML,
+                            fishName: "",
+                            weight: 0,
+                            price: 0,
+                            fraction: 0,
+                            package: "",
+                            totalPrice: number,
+                            customerName: customerName,
+                            index: 0,
+                            paymentsresult: "",
+                            paymentamount: 0,
+                            Clear: false,
+                            });
+
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('POST', '/delete_old_accountDetail');
+                        xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+                        xhr.onreadystatechange = function() {
+                            if (xhr.readyState === 4) { // 確保請求已完成
+                              if (xhr.status === 200) { // 確保請求成功
+                                const response = JSON.parse(xhr.responseText); // 解析回應的JSON數據
+                                alert(response.success)
+                              } else {
+                                alert(response.success)
+                              }
+                            }
+                          };
+                        xhr.send(JSON.stringify(data));
+                        
+                    } else {
+                        alert("未找到數字");
+                    }
+                    
+                    alert("開始刪除舊帳目")
+                } else {
+                    alert("無法刪除舊帳目")
+                }
+                window.location.reload();
+            }else{
+                alert("還原取消")
+                window.location.reload();
+            }
+        }
+        break;
+
         case 27: // clear col
             alert(444)  
         break;

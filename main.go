@@ -284,6 +284,9 @@ func main() {
 	// 還原帳目資料
 	router.POST("/restore_accountDetail", handleRestorePostFish)
 
+	// 刪除舊帳目
+	router.POST("/delete_old_accountDetail", handleOldAccountDetail)
+
 	// 輸入帳目資料
 	router.POST("/payment", payment)
 
@@ -736,6 +739,72 @@ func handleRestorePostFish(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"success": "0"})
+}
+
+func handleOldAccountDetail(c *gin.Context) {
+
+	restore := c.Query("restore")
+
+	fmt.Print(restore)
+
+	// 打開資料庫
+	db, err := sql.Open("sqlite3", DB_Name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	// 讀取客戶資料
+	var fishes []Fish
+	if err := c.BindJSON(&fishes); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	//layout := "2006-01-02"
+	// 解析日期字符串
+
+	/*
+		day := ""
+		day = fishes[0].Date
+
+		t, err := time.Parse(layout, day)
+		if err != nil {
+			fmt.Println("解析错误:", err)
+			return
+		} // 解析日期字符串
+
+	*/
+
+	dbstring := "SELECT ID,Name,TotalArrears,TodayArrears,Print FROM Customer where ID = " + fmt.Sprint(fishes[0].ID)
+	//dbstring := "SELECT " + fmt.Sprint(fishes[0].ID) + ",Name,TotalArrears,TodayArrears,Print FROM Customer"
+
+	rows, err := db.Query(dbstring)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	customers := []Customer{}
+
+	for rows.Next() {
+		var customer Customer
+		err := rows.Scan(&customer.ID, &customer.Name, &customer.TotalArrears, &customer.TodayArrears, &customer.Print)
+		if err != nil {
+			log.Fatal(err)
+		}
+		customers = append(customers, customer)
+
+		if customer.TodayArrears > 0 || customer.TotalArrears > 0 {
+			c.JSON(200, gin.H{"success": "尚有帳款無法清除"})
+			return
+		}
+	}
+
+	_, err = db.Exec("DELETE from accountDetail WHERE ID=? AND Date < ?", fishes[0].ID, fishes[0].Date+" 00:00:00+00:00")
+	c.JSON(200, gin.H{"success": "刪除完成"})
+	return
+
 }
 
 func handleDeletePostFish(c *gin.Context) {
